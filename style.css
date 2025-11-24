@@ -1,0 +1,580 @@
+/* ========================= */
+/* Estilos Generales */
+/* ========================= */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #000000;
+  color: white;
+  text-align: center;
+}
+
+header {
+  background-color: #252f3f; /* encabezado azul gris oscuro */
+  padding: 20px 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center; /* centra el menú */
+  align-items: center;
+  position: relative; /* importante para la línea naranja */
+}
+
+/* ========================= */
+/* Logo fijo a la izquierda */
+/* ========================= */
+.logo {
+  position: absolute;
+  left: -20px;
+  top: -25px;
+}
+
+.logo img {
+  height: 130px;
+  width: auto;
+}
+
+/* ========================= */
+/* Nombre de la empresa fijo */
+/* ========================= */
+.company-name {
+  position: absolute;
+  left: 80px;
+  top: 15px;
+  display: flex;
+  flex-direction: column;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 1.3rem;
+  line-height: 1.1;
+}
+
+/* ========================= */
+/* Menú principal centrado */
+/* ========================= */
+.menu {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+  margin: 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.nav-item {
+  position: relative;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 8px 0;
+  display: inline-block;
+  color: #b5b5b5;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.nav-item:hover {
+  color: #00c6ff; /* azul neón */
+}
+
+.nav-item span {
+  display: inline-block;
+  transition: transform 0.2s cubic-bezier(0.25,1.25,0.5,1), color 0.3s ease;
+  color: inherit;
+}
+
+.nav-item.pressed span {
+  transform: translateY(3px) scale(0.95);
+}
+
+/* ========================= */
+/* Contenido principal */
+/* ========================= */
+main {
+  margin-top: 100px;
+  padding: 0 20px;
+}
+
+/* ========================= */
+/* Línea azul neón fija abajo del encabezado */
+.active-line {
+  position: absolute;
+  bottom: 0; /* 👈 pegada al borde inferior del header */
+  left: 0;
+  height: 3px;
+  width: 0;
+  background-color: #00c6ff; /* azul neón */
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* ==== LOGIN AZUL MARINO + NEÓN ==== */
+.login-blue {
+  position: fixed;
+  inset: 0;
+  background: #0a1a2a;        /* Azul marino oscuro */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Arial', sans-serif;
+}
+
+.login-box {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 40px;
+  border-radius: 15px;
+  width: 320px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 198, 255, 0.3); /* azul neón */
+}
+
+.login-title {
+  text-align: center;
+  color: #00c6ff; /* azul neón */
+  margin-bottom: 25px;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+/* Inputs estilo moderno */
+.input-group {
+  position: relative;
+  margin-bottom: 25px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-bottom: 2px solid #777;
+  background: none;
+  color: white;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+  border-bottom: 2px solid #00c6ff;     /* azul neón */
+}
+
+.input-group label {
+  position: absolute;
+  left: 0;
+  bottom: 12px;
+  color: #aaa;
+  pointer-events: none;
+  transition: 0.3s ease;
+}
+
+/* Subir la etiqueta cuando escribes */
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+  bottom: 35px;
+  font-size: 12px;
+  color: #00c6ff; /* azul neón */
+}
+
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  background: #00c6ff; /* azul neón */
+  border: none;
+  border-radius: 8px;
+  color: #0a1a2a;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn-login:hover {
+  background: #0072ff; /* azul neón oscuro */
+}
+
+.error-message {
+  color: #ff4747;
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  overflow-y: auto; 
+  max-height: 90%;
+}
+
+.modal-content {
+  background-color: #252f3f;
+  padding: 30px;
+  border-radius: 10px;
+  width: 70%;
+  max-width: 900px;
+  max-height: 80vh;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto; 
+  animation: modal-animation 0.5s ease-in-out;
+}
+
+@keyframes modal-animation {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.close-btn {
+  font-size: 30px;
+  font-weight: bold;
+  color: #00c6ff; /* azul neón */
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+
+/* Contenedor de la tabla para permitir desplazamiento */
+.table-container {
+  max-height: 500px;
+  overflow-y: auto; 
+  margin-top: 20px;
+}
+
+/* Estilo de la tabla */
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Estilo de las celdas */
+.modal-table th, .modal-table td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+.modal-table th {
+  background-color: #00c6ff; /* azul neón */
+  color: white;
+}
+
+/* Eliminamos el efecto de hover */
+.modal-table tr:hover {
+  background-color: transparent; 
+}
+
+/* Estilo para el contenido del panel */
+.nav-item.active {
+  color: #00c6ff; /* azul neón */
+  font-weight: bold;
+}
+
+.nav-item span {
+  color: #b5b5b5;
+  display: inline-block;
+  transition: transform 0.2s ease, color 0.3s ease;
+}
+
+/* Opcional: Personalizar la línea activa del menú */
+.active-line {
+  height: 3px;
+  background-color: #00c6ff; /* azul neón */
+  width: 0;
+  position: absolute;
+  bottom: 0;
+  transition: width 0.3s ease, left 0.3s ease;
+}
+
+/* Estilo del botón "Añadir Producto" */
+.add-product-btn {
+  display: inline-block;
+  background-color: #00c6ff; /* azul neón */
+  color: white;
+  font-size: 16px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  text-align: center;
+}
+
+.add-product-btn:hover {
+  background-color: #0072ff; /* azul neón oscuro */
+  transform: translateY(-2px);
+}
+
+.add-product-btn:active {
+  background-color: #005bb5; /* azul neón más oscuro */
+  transform: translateY(1px);
+}
+
+.add-product-btn:focus {
+  outline: none; 
+}
+
+/* Estilo de las tablas para darles un buen espaciado */
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.modal-table th, .modal-table td {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+.modal-table th {
+  background-color: #00c6ff; /* azul neón */
+  color: #333;
+}
+
+/* Estilo para las celdas editables */
+td[contenteditable="true"] {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+td[contenteditable="true"]:focus {
+  background-color: #eef;
+  border-color: #aaa;
+}
+
+/* Estilo para las tablas de las áreas */
+.area-table th, .area-table td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.area-table th {
+  background-color: #00c6ff; /* azul neón */
+  color: white;
+}
+
+.area-table td {
+  background-color: #f5f5f5; 
+}
+
+.area-table td[contenteditable="true"]:focus {
+  background-color: #eef; 
+  border-color: #aaa;
+}
+
+.add-product-btn {
+  background: #00c6ff; /* azul neón */
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+}
+
+.add-product-btn:hover {
+  background-color: #0072ff;
+}
+
+.add-product-btn:active {
+  background-color: #005bb5;
+}
+
+/* Opcional: Agregar un borde o un color especial para los productos añadidos */
+.area-table td {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.8); /* empieza más pequeño */
+  background: #00c6ff; 
+  color: black;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  opacity: 0;
+  z-index: 9999;
+  pointer-events: none;
+  animation: none; /* no animación al inicio */
+}
+
+.toast.show {
+  opacity: 1;
+  animation: toast-bounce 0.6s ease forwards; /* animación de rebote */
+}
+
+@keyframes toast-bounce {
+  0% {
+    transform: translateX(-50%) translateY(-30px) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(-50%) translateY(10px) scale(1.05);
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(-50%) translateY(-5px) scale(0.98);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+
+
+
+.select-wrapper {
+  position: relative;
+  width: auto;       /* No ocupa todo el ancho */
+  max-width: 200px;  /* Ajusta según quieras */
+}
+
+.select-display {
+width: 100%;
+padding: 10px;
+background: linear-gradient(90deg, #00c6ff, #0072ff);  /* degradado neón */
+color: white;
+border-radius: 10px;
+font-weight: bold;
+text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+cursor: pointer;
+font-size: 14px;
+border: 1px solid #0072ff;
+text-align: left;
+}
+
+/* Estilo general (PC / laptop) */
+.select-options {
+  display: none;
+  position: absolute;
+  top: 105%;
+  left: 0;
+  width: 100%;
+  max-height: 200px;          /* compacto con scroll interno */
+  overflow-y: auto;
+  z-index: 9999;
+  background: #001f4d;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 114, 255, 0.5);
+}
+
+.select-option {
+  padding: 12px 15px;
+  color: #00f0ff;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0,255,255,0.2);
+}
+
+.select-option:hover {
+  background: #0074ff;
+  color: white;
+}
+
+/* -------------------------------
+ 🎯 SOLO EN CELULAR
+ Vista fullscreen
+--------------------------------*/
+@media (max-width: 768px) {
+  .select-display {
+      background: transparent; /* transparente */
+      color: black;
+      border: none;             /* quitar borde */
+      -webkit-appearance: none; /* quitar estilo iOS */
+      -moz-appearance: none;    /* quitar estilo Firefox */
+      appearance: none;         /* quitar estilo general */
+      box-shadow: none;         /* quitar sombra por defecto */
+      outline: none;            /* quitar el borde al hacer foco */
+  }
+  .select-options {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: calc(100vw - 2 * var(--margin-lateral, 20px));
+      max-height: calc(100vh - var(--margin-superior, 100px) - var(--margin-inferior, 100px));
+      width: 100%;
+      background: #001f4d;
+      z-index: 999999;
+      overflow-y: auto;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+      padding: 20px 10px;
+  }
+
+  .select-option {
+      padding: 16px;
+      font-size: 18px;
+      color: #00f0ff;
+  }
+
+  .select-option:hover {
+      background: #0074ff;
+      color: white;
+  }
+
+  .select-close-btn {
+      display: block;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 8px 12px;
+      background: #00c6ff;
+      color: #001f4d;
+      border-radius: 6px;
+      z-index: 9999999;
+      cursor: pointer;
+  }
+}
+@media (max-width: 768px) {
+
+  /* Cambiamos absolute → fixed */
+  .logo {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 20px;     /* Ajusta esto para bajarlo */
+    top: auto;
+  }
+
+  .logo img {
+    height: 80px;     /* Ajusta tamaño si quieres */
+    width: auto;
+  }
+
+  .company-name {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 110px;    /* 20px + 80px del logo + 10px separación */
+    top: auto;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+}
