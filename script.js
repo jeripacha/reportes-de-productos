@@ -23,6 +23,11 @@ const cuadrarBtn = document.createElement("button");
 cuadrarBtn.textContent = "Cuadrar Productos";
 cuadrarBtn.classList.add("add-product-btn");
 document.getElementById("panel").appendChild(cuadrarBtn);
+const pdfFinalBtn = document.createElement("button");
+pdfFinalBtn.textContent = "PDF Final Simple";
+pdfFinalBtn.classList.add("add-product-btn");
+document.getElementById("panel").appendChild(pdfFinalBtn);
+
 // =========================
 //     LOGIN FUNCIONAL
 // =========================
@@ -614,6 +619,78 @@ document.getElementById("download-pdf-btn").addEventListener("click", () => {
         doc.save("Reporte_producto_PACHA.pdf");
     };
 });
+pdfFinalBtn.addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p", "mm", "a4");
+
+    const logo = new Image();
+    logo.src = "1763002036643.png";
+
+    const now = new Date();
+    const fecha = now.toLocaleDateString("es-ES");
+    const hora = now.toLocaleTimeString("es-ES");
+
+    logo.onload = () => {
+
+        // ENCABEZADO
+        doc.addImage(logo, "PNG", 10, 10, 40, 40);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+        doc.text("PACHA SUNSET", 60, 25);
+
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Fecha: ${fecha}   Hora: ${hora}`, 60, 35);
+
+        // ====================================
+        //  ORDEN DE PRODUCTOS → CONTEO INICIAL
+        // ====================================
+        const conteoData = JSON.parse(localStorage.getItem("conteo") || "[]");
+        const ordenProductos = conteoData.map(r => r[0].trim());
+
+        // ================
+        //   CALCULO FINAL
+        // ================
+        const finales = [
+            "final-pacena","final-monster","final-schweppes",
+            "final-deposito","final-lavaplatos"
+        ];
+
+        const finalSum = {};
+
+        finales.forEach(area => {
+            const data = JSON.parse(localStorage.getItem(area) || "[]");
+
+            data.forEach(row => {
+                const prod = row[0].trim();
+                const cant = parseFloat(row[1]) || 0;
+
+                if (!finalSum[prod]) finalSum[prod] = 0;
+                finalSum[prod] += cant;
+            });
+        });
+
+        // Construir tabla ORDENADA
+        const rows = ordenProductos.map(prod => [
+            prod,
+            finalSum[prod] || 0
+        ]);
+
+        // ===============================
+        //         TABLA PDF SIMPLE
+        // ===============================
+        doc.autoTable({
+            startY: 55,
+            head: [["Producto", "Conteo Final"]],
+            body: rows,
+            styles: { fontSize: 14, cellPadding: 4, halign: "center" },
+            headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] }
+        });
+
+        doc.save("Conteo_Final_PACHA.pdf");
+    };
+});
+
 // =========================
 //   PDF CONTEO + PEDIDOS
 // =========================
@@ -707,3 +784,123 @@ document.getElementById("btn-reset").addEventListener("click", () => {
         // aquí va tu función de reinicio
     }
 });
+// =========================
+//  GENERAR REPORTE TOTAL
+//  (Suma areas + ventas + cortesias + mesas)
+// =========================
+
+// Reemplaza las listas vacías por cálculo desde localStorage / DOM
+function obtenerDatosDeArea(areaId) {
+    // lee el array guardado en localStorage (formato: [[prod,entregada,devuelta], ...])
+    return JSON.parse(localStorage.getItem(areaId) || "[]");
+}
+
+function obtenerDatosSimples(areaId) {
+    // formato: [[prod,cantidad], ...]
+    return JSON.parse(localStorage.getItem(areaId) || "[]");
+}
+
+function calcularTotalesUso() {
+    const totales = {}; // { producto: cantidad }
+
+    // 1) Áreas con entregada/devuelta
+    const areas = ["area-basines","area-cumpleanos","area-vasos"];
+    areas.forEach(areaId => {
+        const rows = obtenerDatosDeArea(areaId);
+        rows.forEach(r => {
+            const producto = (r[0] || "").toString().trim();
+            const entregada = parseFloat(r[1]) || 0;
+            const devuelta = parseFloat(r[2]) || 0;
+            const uso = entregada - devuelta;
+            if (!producto) return;
+            if (!totales[producto]) totales[producto] = 0;
+            totales[producto] += uso;
+        });
+    });
+
+    // 2) Ventas, Cortesias, Mesas (formato prod,cantidad)
+    const listasSimples = ["ventas","cortesias","mesas"];
+    listasSimples.forEach(areaId => {
+        const rows = obtenerDatosSimples(areaId);
+        rows.forEach(r => {
+            const producto = (r[0] || "").toString().trim();
+            const cantidad = parseFloat(r[1]) || 0;
+            if (!producto) return;
+            if (!totales[producto]) totales[producto] = 0;
+            totales[producto] += cantidad;
+        });
+    });
+
+    return totales;
+}
+
+function generarReportePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p","mm","a4");
+
+    const now = new Date();
+    const fecha = now.toLocaleDateString("es-ES");
+    const hora = now.toLocaleTimeString("es-ES");
+
+    // Header simple
+    doc.setFontSize(18);
+    doc.text("Reporte Total de Uso - PACHA SUNSET", 14, 18);
+    doc.setFontSize(11);
+    doc.text(`Fecha: ${fecha}   Hora: ${hora}`, 14, 26);
+
+    // Calcular totales reales
+    const totales = calcularTotalesUso();
+
+    // Convertir a filas para la tabla y ordenar por nombre
+    const rows = Object.keys(totales).sort((a,b)=> a.localeCompare(b)).map(prod => {
+        // redondear a 2 decimales si corresponde; si entero mostrar entero
+        const cantidadRaw = totales[prod];
+        const cantidad = Number.isInteger(cantidadRaw) ? cantidadRaw : Math.round(cantidadRaw * 100) / 100;
+        return [prod, String(cantidad)];
+    });
+
+    // Si no hay datos, mostrar mensaje
+    if (rows.length === 0) {
+        doc.setFontSize(12);
+        doc.text("No se encontraron registros en áreas, ventas, cortesías o mesas.", 14, 40);
+        doc.save("reporte_total_uso.pdf");
+        showToast("⚠️ No hay datos para generar el reporte");
+        return;
+    }
+
+    // Usar autoTable para presentación
+    doc.autoTable({
+        startY: 36,
+        head: [["Producto", "Cantidad Usada"]],
+        body: rows,
+        styles: { fontSize: 11, cellPadding: 4 },
+        headStyles: { fillColor: [0,0,0], textColor: [255,255,255] },
+        margin: { left: 14, right: 14 },
+        didDrawPage: function (data) {
+            // pie de página con número de página
+            const pageCount = doc.internal.getNumberOfPages();
+            const str = "Página " + pageCount;
+            doc.setFontSize(9);
+            doc.text(str, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 8);
+        }
+    });
+
+    doc.save("reporte_total_uso.pdf");
+    showToast("📄 PDF generado correctamente");
+}
+
+// Conectar el botón creado dinámicamente pdfFinalBtn (ya lo agregaste al panel)
+try {
+    if (typeof pdfFinalBtn !== "undefined" && pdfFinalBtn instanceof HTMLElement) {
+        // sobreescribimos comportamiento anterior para que genere el reporte total
+        pdfFinalBtn.removeEventListener && pdfFinalBtn.removeEventListener("click", null);
+        pdfFinalBtn.addEventListener("click", generarReportePDF);
+        // si quieres un botón separado en vez de usar pdfFinalBtn, coméntame y lo cambio
+    } else {
+        // fallback: vincular al botón dentro del modal-cuadre si existe
+        const btnModalDownload = document.getElementById("download-pdf-btn");
+        if (btnModalDownload) btnModalDownload.addEventListener("click", generarReportePDF);
+    }
+} catch(e){
+    console.error("Error al conectar botón PDF:", e);
+}
