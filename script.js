@@ -615,8 +615,8 @@ document.getElementById("download-pdf-btn").addEventListener("click", () => {
                 if (data.pageNumber === 1) drawHeader();
             }
         });
-
-        doc.save("Reporte_producto_PACHA.pdf");
+        const timestamp = `${fecha.replace(/\//g, "-")}_${hora.replace(/:/g, "-")}`;
+        doc.save(`Reporte_producto_PACHA_${timestamp}.pdf`);
     };
 });
 pdfFinalBtn.addEventListener("click", () => {
