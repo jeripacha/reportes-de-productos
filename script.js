@@ -1,906 +1,941 @@
-// =========================
-//   VARIABLES PRINCIPALES
-// =========================
-const navItems = document.querySelectorAll('.nav-item');
-const activeLine = document.querySelector('.active-line');
+const historialReportes = JSON.parse(localStorage.getItem("historialReportes")) || [];
 
-const modals = {
-    conteo: document.getElementById("modal"),
-    pedidos: document.getElementById("modal-pedidos"),
-    areas: document.getElementById("modal-areas"),
-    ventas: document.getElementById("modal-ventas"),
-    cortesias: document.getElementById("modal-cortesias"),
-    mesas: document.getElementById("modal-mesas"),
-    final: document.getElementById("modal-final")
+const sidebar = document.getElementById("sidebar");
+const modal = document.getElementById("modal");
+const menuBtn = document.getElementById("openMenu");
+const modalTitle = document.getElementById("modal-title");
+const addProductBtn = document.getElementById("add-product-btn");
+const tableBody = document.getElementById("table-body");
+const tableHead = document.getElementById("table-head");
+
+const productosBase = [
+  "Fernet Buhero","Fernet Branca","Flor de caña 7 años","Flor de caña 5 años",
+  "Ron Havana","Gyn Andina","Gyn Frutilla","Gyn Amazónico","Gyn Frutos del Bosque",
+  "Cerveza Huari","Cerveza Budweiser","Cerveza Corona","Latas Paceña","Golden",
+  "Viuda","Parrales","Agua Pacha","Agua Vital Normal","Agua Vital con Gas",
+  "Sens Maracuyá","Sens Achachairú","Sens Limón","Sens Arándano","Sens Cereza",
+  "Sens Açaí","Vodka 1825","Tequila Jose Cuervo","Jager","Tres plumas chocolate blanco",
+  "Tres plumas chocolate","Tres plumas amareto","Tres plumas menta","Black Label 750 ml",
+  "Red Label","Black Label 1L","Altosama","Coca-Cola 3L","Sprite 3L","Coca-Cola 2L",
+  "Sprite 2L","Simba Pomelo","Monster","Agua Tónica 900 ml","Ginger 900 ml","Ginger 1.5L",
+  "Pura Vida","Sprite 2.5L","Blue Curacao","Granadina","Cocalero","Chivas","Harry el limonero",
+  "Supay","Limoncello","Barcelo Imperial","Camel 2 click Grande","Camel 2 click Pequeño",
+  "Camel 1 click Grande","Camel 1 click Pequeño","Arancello","Tundiqui"
+];
+
+const productosMesas = [
+  "Parrales","Viuda","Gyn Amazónico","Flor de caña 5 años","Fernet Buhero",
+  "Coca-Cola 2L","Ginger 1.5L","Simba Pomelo","Vodka 1825","Agua Tónica 900 ml"
+];
+
+const productosAreas = {
+  "Basines": ["Fernet Buhero","Cerveza Huari","Agua Pacha","Vodka 1825","Coca-Cola 3L","Sprite 3L"],
+  "Cumpleaños": ["Flor de caña 5 años","Gyn Frutilla","Parrales","Monster","Sens Limón","Sens Maracuyá"],
+  "Vasos": ["Golden","Latas Paceña","Viuda","Agua Vital Normal","Agua Vital con Gas","Red Label"]
 };
 
-const closeBtn = document.querySelectorAll(".close-btn");
-const saveAllBtn = document.createElement("button");
-saveAllBtn.textContent = "Guardar Todo";
-saveAllBtn.classList.add("add-product-btn");
-document.getElementById("panel").appendChild(saveAllBtn);
-const cuadrarBtn = document.createElement("button");
-cuadrarBtn.textContent = "Cuadrar Productos";
-cuadrarBtn.classList.add("add-product-btn");
-document.getElementById("panel").appendChild(cuadrarBtn);
-const pdfFinalBtn = document.createElement("button");
-pdfFinalBtn.textContent = "PDF Final Simple";
-pdfFinalBtn.classList.add("add-product-btn");
-document.getElementById("panel").appendChild(pdfFinalBtn);
+// Objeto global para guardar valores de celdas
+const dataGuardada = {};
+// Array para guardar productos agregados dinámicamente en Cortesías
+const productosCortesiasDinamicos = [];
 
-// =========================
-//     LOGIN FUNCIONAL
-// =========================
-document.getElementById("login-form").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    const user = document.getElementById("username").value;
-    const pass = document.getElementById("password").value;
-    const error = document.getElementById("login-error");
-
-    const users = { "almacen": "sopa", "jefe": "admin" };
-
-    if (users[user] && users[user] === pass) {
-        document.getElementById("login-container").style.display = "none";
-        document.getElementById("panel").style.display = "block";
-    } else {
-        error.textContent = "Usuario o contraseña incorrectos";
-    }
-});
-
-// =========================
-//     MOSTRAR MODALES
-// =========================
-navItems.forEach((item, index) => {
-    item.addEventListener('click', () => {
-        Object.values(modals).forEach(m => m.style.display = "none");
-        const keys = Object.keys(modals);
-        modals[keys[index]].style.display = "flex";
-
-        document.querySelector('.active')?.classList.remove('active');
-        item.classList.add('active');
-
-        navItems.forEach(i => i.querySelectorAll('span').forEach(span => span.style.color = "#b5b5b5"));
-        const spans = item.querySelectorAll('span');
-        spans.forEach((span, i) => setTimeout(() => { span.style.transition='0.3s'; span.style.color='#fff'; }, i*30));
-
-        activeLine.style.width = item.offsetWidth + "px";
-        activeLine.style.left = item.offsetLeft + "px";
-    });
-});
-
-// =========================
-//        CERRAR MODALES
-// =========================
-// =========================
-//        CERRAR MODALES
-// =========================
-closeBtn.forEach(btn => {
-    btn.addEventListener("click", () => {
-        Object.values(modals).forEach(m => {
-            m.style.display = "none";
-
-            // Cerrar todos los selects dentro del modal
-            m.querySelectorAll(".select-options").forEach(select => {
-                select.style.display = "none";
-            });
-        });
-    });
-});
-
-window.onclick = function(event) {
-    if (Object.values(modals).includes(event.target)) {
-        Object.values(modals).forEach(m => {
-            m.style.display = "none";
-
-            // Cerrar todos los selects dentro del modal
-            m.querySelectorAll(".select-options").forEach(select => {
-                select.style.display = "none";
-            });
-        });
-    }
-};
-
-// =========================
-//   FUNCIONES DE PRODUCTOS
-// =========================
-function getListaProductos() {
-    const conteo = document.querySelectorAll("#conteo-body tr td:first-child");
-    return [...conteo].map(td => td.textContent.trim());
+// -------------------- RECUPERAR DATOS DE LOCALSTORAGE --------------------
+const dataGuardadaLocal = localStorage.getItem("dataGuardada");
+if (dataGuardadaLocal) {
+  Object.assign(dataGuardada, JSON.parse(dataGuardadaLocal));
 }
 
-function crearSelectProductos(valorSeleccionado = "") {
-    const productos = getListaProductos();
+const cortesiasLocal = localStorage.getItem("productosCortesiasDinamicos");
+if (cortesiasLocal) {
+  const items = JSON.parse(cortesiasLocal);
+  items.forEach(item => productosCortesiasDinamicos.push({row: null, nombre: item.nombre, cantidad: item.cantidad}));
+}
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "select-wrapper";
+// -------------------- MENU --------------------
+menuBtn.onclick = () => {
+  sidebar.classList.add("open");
+  menuBtn.style.display = "none";
+};
 
-    const display = document.createElement("div");
-    display.className = "select-display";
-    display.textContent = valorSeleccionado || "Seleccionar producto";
+document.getElementById("closeMenu").onclick = () => {
+  sidebar.classList.remove("open");
+  menuBtn.style.display = "block";
+};
 
-    const opciones = document.createElement("div");
-    opciones.className = "select-options";
+// -------------------- BOTONES --------------------
+const clearDataBtn = document.getElementById("clearDataBtn");
+const mensajeBorrado = document.getElementById("mensajeBorrado");
+const inicioBtn = document.getElementById("inicioBtn");
+const modalInicio = document.getElementById("modalInicio");
+const resumenBody = document.getElementById("resumenBody");
+const usoBtn = document.getElementById("usoBtn");
+const finalBtn = document.getElementById("finalBtn");
 
-    // Opciones
-    productos.forEach(prod => {
-        const opt = document.createElement("div");
-        opt.className = "select-option";
-        opt.textContent = prod;
 
-        opt.onclick = () => {
-            display.textContent = prod;
-            wrapper.value = prod;
-            opciones.style.display = "none";
-            wrapper.dispatchEvent(new Event("change"));
+
+// Ocultamos botones al iniciar
+clearDataBtn.style.display = "none";
+inicioBtn.style.display = "none";
+mensajeBorrado.classList.remove("show");
+
+// -------------------- SIDEBAR ITEM --------------------
+document.querySelectorAll(".sidebar-item").forEach(btn => {
+  btn.onclick = () => {
+    const title = btn.textContent.trim();
+
+
+    // Ocultar botones por defecto al abrir cualquier modal
+    clearDataBtn.style.display = "none";
+    inicioBtn.style.display = "none";
+    usoBtn.style.display = "none";
+    finalBtn.style.display = "none";
+    reporteBtn.style.display = "none"; // agregado
+    mensajeBorrado.classList.remove("show");
+
+
+    modalTitle.textContent = title;
+    modal.style.display = "block";
+    sidebar.classList.remove("open");
+    menuBtn.style.display = "block";
+
+    tableBody.innerHTML = "";
+    tableHead.innerHTML = "";
+    addProductBtn.style.display = "none";
+    document.getElementById("productos-table").style.display = "table";
+
+    // ------------------ CONTEO INICIAL ------------------
+    if(title.includes("Conteo Inicial")) {
+      const headerRow = document.createElement("tr");
+      ["Producto","Conteo Inicial","Ingreso Nuevo Stock"].forEach(text => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headerRow.appendChild(th);
+      });
+      tableHead.appendChild(headerRow);
+
+      productosBase.forEach(prod => {
+        const row = document.createElement("tr");
+
+        const tdNombre = document.createElement("td");
+        tdNombre.textContent = prod;
+
+        const tdConteo = document.createElement("td");
+        tdConteo.contentEditable = "true";
+        tdConteo.textContent = dataGuardada[`${prod}_conteo`] || "";
+
+        const tdIngreso = document.createElement("td");
+        tdIngreso.contentEditable = "true";
+        tdIngreso.textContent = dataGuardada[`${prod}_ingreso`] || "";
+
+        // Guardar al escribir
+        tdConteo.addEventListener("input", () => {
+          dataGuardada[`${prod}_conteo`] = tdConteo.textContent;
+          localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+        });
+        tdIngreso.addEventListener("input", () => {
+          dataGuardada[`${prod}_ingreso`] = tdIngreso.textContent;
+          localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+        });
+
+        row.appendChild(tdNombre);
+        row.appendChild(tdConteo);
+        row.appendChild(tdIngreso);
+        tableBody.appendChild(row);
+      });
+      return;
+    }
+
+    // ------------------ ÁREAS ------------------
+    if(title.includes("Áreas")) {
+      Object.keys(productosAreas).forEach(area => {
+        const catRow = document.createElement("tr");
+        const catCell = document.createElement("td");
+        catCell.colSpan = 4;
+        catCell.textContent = area;
+        catCell.style.fontWeight = "bold";
+        catCell.style.background = "#ffcccb";
+        catCell.style.textAlign = "center";
+        catRow.appendChild(catCell);
+        tableBody.appendChild(catRow);
+
+        const headerRow = document.createElement("tr");
+        ["Producto","Entrega","Devolución","Uso"].forEach(text => {
+          const th = document.createElement("th");
+          th.textContent = text;
+          headerRow.appendChild(th);
+        });
+        tableBody.appendChild(headerRow);
+
+        productosAreas[area].forEach(prod => {
+          const row = document.createElement("tr");
+
+          const tdNombre = document.createElement("td");
+          tdNombre.textContent = prod;
+
+          const tdEntrega = document.createElement("td");
+          tdEntrega.contentEditable = "true";
+          tdEntrega.textContent = dataGuardada[`${prod}_entrega`] || "";
+
+          const tdDevolucion = document.createElement("td");
+          tdDevolucion.contentEditable = "true";
+          tdDevolucion.textContent = dataGuardada[`${prod}_devolucion`] || "";
+
+          const tdUso = document.createElement("td");
+          tdUso.textContent = dataGuardada[`${prod}_uso`] || "";
+
+          const calcularUso = () => {
+            const entrega = parseInt(tdEntrega.textContent) || 0;
+            const devol = parseInt(tdDevolucion.textContent) || 0;
+            tdUso.textContent = entrega - devol;
+            dataGuardada[`${prod}_uso`] = tdUso.textContent;
+            localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+          };
+          tdEntrega.addEventListener("input", () => {
+            dataGuardada[`${prod}_entrega`] = tdEntrega.textContent;
+            localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+            calcularUso();
+          });
+          tdDevolucion.addEventListener("input", () => {
+            dataGuardada[`${prod}_devolucion`] = tdDevolucion.textContent;
+            localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+            calcularUso();
+          });
+
+          row.appendChild(tdNombre);
+          row.appendChild(tdEntrega);
+          row.appendChild(tdDevolucion);
+          row.appendChild(tdUso);
+          tableBody.appendChild(row);
+        });
+      });
+      return;
+    }
+
+    // ------------------ CORTESÍAS ------------------
+    if(title.includes("Cortesías")) {
+      const headerRow = document.createElement("tr");
+      ["Producto","Cantidad"].forEach(text => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headerRow.appendChild(th);
+      });
+      tableHead.appendChild(headerRow);
+
+      tableBody.innerHTML = "";
+      addProductBtn.style.display = "block";
+
+      // Reconstruir productos dinámicos
+      productosCortesiasDinamicos.forEach(item => {
+        const row = document.createElement("tr");
+
+        const tdNombre = document.createElement("td");
+        const select = document.createElement("select");
+        productosBase.forEach(prod => {
+          const option = document.createElement("option");
+          option.value = prod;
+          option.textContent = prod;
+          if (prod === item.nombre) option.selected = true;
+          select.appendChild(option);
+        });
+        tdNombre.appendChild(select);
+
+        const tdCantidad = document.createElement("td");
+        tdCantidad.contentEditable = "true";
+        tdCantidad.textContent = item.cantidad || "";
+
+        const actualizarData = () => {
+          const prodSeleccionado = select.value;
+          dataGuardada[`cortesias_${prodSeleccionado}`] = tdCantidad.textContent;
+          item.nombre = prodSeleccionado;
+          item.cantidad = tdCantidad.textContent;
+
+          localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+          localStorage.setItem("productosCortesiasDinamicos", JSON.stringify(productosCortesiasDinamicos.map(p => ({nombre: p.nombre, cantidad: p.cantidad}))));
         };
+        select.addEventListener("change", actualizarData);
+        tdCantidad.addEventListener("input", actualizarData);
 
-        opciones.appendChild(opt);
+        row.appendChild(tdNombre);
+        row.appendChild(tdCantidad);
+        tableBody.appendChild(row);
+      });
+
+      return;
+    }
+
+    // ------------------ CONTEO FINAL ------------------
+    if(title.toLowerCase().includes("conteo final")) {
+      tableBody.innerHTML = "";
+      tableHead.innerHTML = "";
+
+      const headerRow = document.createElement("tr");
+      const columnas = [
+        { tipo: "texto", contenido: "Producto" },
+        { tipo: "imagen", ruta: "pacena-cerveza-logo-png_seeklogo-508403.png", tooltip: "frezer paceña" },
+        { tipo: "imagen", ruta: "73999-removebg-preview.png", tooltip: "frezer monster" },
+        { tipo: "imagen", ruta: "Soda-Brand-Logos-18-1200x750-removebg-preview.png", tooltip: "frezer scheppes" },
+        { tipo: "imagen", ruta: "Gemini_Generated_Image_lodwpulodwpulodw-removebg-preview.png", tooltip: "lavaplatos" },
+        { tipo: "imagen", ruta: "Gemini_Generated_Image_3wy3z53wy3z53wy3-removebg-preview.png", tooltip: "deposito" }
+      ];
+
+      columnas.forEach(col => {
+        const th = document.createElement("th");
+        if (col.tipo === "texto") th.textContent = col.contenido;
+        else {
+          const container = document.createElement("div");
+          container.className = "img-container-header";
+          const img = document.createElement("img");
+          img.src = col.ruta; 
+          img.alt = col.tooltip;
+          img.title = col.tooltip;
+          container.appendChild(img);
+          th.appendChild(container);
+        }
+        headerRow.appendChild(th);
+      });
+      tableHead.appendChild(headerRow);
+
+      productosBase.forEach(prod => {
+        const row = document.createElement("tr");
+        const tdNombre = document.createElement("td");
+        tdNombre.textContent = prod;
+        row.appendChild(tdNombre);
+
+        for (let i = 0; i < 5; i++) {
+          const td = document.createElement("td");
+          td.contentEditable = "true";
+          td.textContent = dataGuardada[`${prod}_final_${i}`] || "";
+          td.style.textAlign = "center";
+          td.addEventListener("input", () => {
+            dataGuardada[`${prod}_final_${i}`] = td.textContent;
+            localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+          });
+          row.appendChild(td);
+        }
+        tableBody.appendChild(row);
+      });
+
+      clearDataBtn.style.display = "block";
+      inicioBtn.style.display = "block";
+      usoBtn.style.display = "block";
+      finalBtn.style.display = "block";
+      // Mostrar botón de reporte solo en conteo final
+      reporteBtn.style.display = "block";
+
+      return;
+    }
+
+    // ------------------ MESAS Y OTROS ------------------
+    const headerRow = document.createElement("tr");
+    ["Producto","Cantidad"].forEach(text => {
+      const th = document.createElement("th");
+      th.textContent = text;
+      headerRow.appendChild(th);
     });
+    tableHead.appendChild(headerRow);
 
-    // Toggle: abrir o cerrar select al hacer clic
-    display.onclick = (e) => {
-        e.stopPropagation();
-        opciones.style.display = opciones.style.display === "block" ? "none" : "block";
-    };
+    let listaProductos = productosBase;
+    let tipoRegistro = "ventas";
 
-    // Cerrar select si se hace clic fuera
-    document.addEventListener("click", (e) => {
-        if (!wrapper.contains(e.target)) {
-            opciones.style.display = "none";
+    if (title.includes("Mesas")) {
+      listaProductos = productosMesas;
+      tipoRegistro = "mesas";
+    }
+
+    listaProductos.forEach(prod => {
+      const row = document.createElement("tr");
+      const tdNombre = document.createElement("td");
+      tdNombre.textContent = prod;
+      const tdCantidad = document.createElement("td");
+      tdCantidad.contentEditable = "true";
+      tdCantidad.textContent = dataGuardada[`${prod}_${tipoRegistro}`] || "";
+
+      tdCantidad.addEventListener("input", () => {
+        dataGuardada[`${prod}_${tipoRegistro}`] = tdCantidad.textContent;
+        localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+      });
+
+      row.appendChild(tdNombre);
+      row.appendChild(tdCantidad);
+      tableBody.appendChild(row);
+    });
+  };
+});
+
+// -------------------- AGREGAR PRODUCTO CORTESÍA --------------------
+addProductBtn.onclick = () => {
+  const row = document.createElement("tr");
+
+  const tdNombre = document.createElement("td");
+  const select = document.createElement("select");
+  productosBase.forEach(prod => {
+    const option = document.createElement("option");
+    option.value = prod;
+    option.textContent = prod;
+    select.appendChild(option);
+  });
+  tdNombre.appendChild(select);
+
+  const tdCantidad = document.createElement("td");
+  tdCantidad.contentEditable = "true";
+  tdCantidad.textContent = "";
+
+  const item = {row, nombre: select.value, cantidad: ""};
+  productosCortesiasDinamicos.push(item);
+
+  const actualizarData = () => {
+    const prodSeleccionado = select.value;
+    dataGuardada[`cortesias_${prodSeleccionado}`] = tdCantidad.textContent;
+    item.nombre = prodSeleccionado;
+    item.cantidad = tdCantidad.textContent;
+
+    localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+    localStorage.setItem("productosCortesiasDinamicos", JSON.stringify(productosCortesiasDinamicos.map(p => ({nombre: p.nombre, cantidad: p.cantidad}))));
+  };
+
+  select.addEventListener("change", actualizarData);
+  tdCantidad.addEventListener("input", actualizarData);
+
+  row.appendChild(tdNombre);
+  row.appendChild(tdCantidad);
+  tableBody.appendChild(row);
+};
+
+// -------------------- CERRAR MODAL --------------------
+document.getElementById("closeModal").onclick = () => {
+  modal.style.display = "none";
+  mensajeBorrado.classList.remove("show");
+};
+
+window.onclick = (e) => {
+  if (e.target === modal) {
+    modal.style.display = "none";
+    mensajeBorrado.classList.remove("show");
+  }
+};
+
+// -------------------- BORRAR DATOS --------------------
+// -------------------- BORRAR DATOS (Y TRASPASAR FINAL A INICIAL) --------------------
+clearDataBtn.onclick = () => {
+    // 1. Creamos un objeto temporal para capturar el stock final actual
+    const nuevoInicio = {};
+
+    productosBase.forEach(prod => {
+        let totalFinal = 0;
+        // Sumamos las 5 columnas de conteo final (freezers, depósitos, etc.)
+        for (let i = 0; i < 5; i++) {
+            totalFinal += parseInt(dataGuardada[`${prod}_final_${i}`]) || 0;
+        }
+
+        // Si el total es mayor a 0, lo preparamos para el nuevo Conteo Inicial
+        if (totalFinal > 0) {
+            nuevoInicio[`${prod}_conteo`] = totalFinal.toString();
         }
     });
 
-    wrapper.appendChild(display);
-    wrapper.appendChild(opciones);
-    wrapper.value = valorSeleccionado;
+    // 2. Limpiamos TODO el almacenamiento y la memoria
+    localStorage.removeItem("dataGuardada");
+    localStorage.removeItem("productosCortesiasDinamicos");
 
-    return wrapper;
-}
+    // Vaciamos el objeto dataGuardada sin perder su referencia
+    Object.keys(dataGuardada).forEach(key => delete dataGuardada[key]);
+    productosCortesiasDinamicos.length = 0;
 
-function createRow(cells, editable=true) {
-    const row = document.createElement("tr");
-    cells.forEach(text => {
-        const td = document.createElement("td");
-        td.textContent = text;
-        if(editable) td.contentEditable = "true";
-        row.appendChild(td);
+    // 3. Inyectamos los valores del final en el nuevo inicio y guardamos
+    Object.assign(dataGuardada, nuevoInicio);
+    localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+
+    // 4. Limpieza visual inmediata de la tabla abierta
+    tableBody.querySelectorAll("tr").forEach(row => {
+        row.querySelectorAll("td").forEach((cell, idx) => {
+            if(idx > 0) cell.textContent = "";
+        });
     });
-    return row;
-}
-function showToast(message) {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.classList.add("show");
+
+    // 5. Feedback visual rápido (Toast)
+    mensajeBorrado.textContent = "✅ Stock Final movido a Inicial. Datos limpiados.";
+    mensajeBorrado.classList.add("show");
 
     setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2000); // 5 segundos
-}
-
-// =========================
-//      AREAS Y VENTAS
-// =========================
-function addProduct(areaId) {
-    const tbody = document.getElementById(`${areaId}-body`);
-    const row = document.createElement("tr");
-
-    const tdProd = document.createElement("td");
-    tdProd.appendChild(crearSelectProductos());
-
-    const tdEntregada = document.createElement("td");
-    const tdDevuelta = document.createElement("td");
-    const tdUso = document.createElement("td");
-    tdEntregada.contentEditable = true;
-    tdDevuelta.contentEditable = true;
-    tdUso.textContent = "0";
-    tdUso.style.fontWeight = "bold";
-
-    function calcularUso() {
-        const e = parseFloat(tdEntregada.textContent)||0;
-        const d = parseFloat(tdDevuelta.textContent)||0;
-        tdUso.textContent = e-d;
-        saveArea(areaId);
-    }
-
-    tdEntregada.oninput = calcularUso;
-    tdDevuelta.oninput = calcularUso;
-
-    row.appendChild(tdProd);
-    row.appendChild(tdEntregada);
-    row.appendChild(tdDevuelta);
-    row.appendChild(tdUso);
-    tbody.appendChild(row);
-
-    saveArea(areaId);
-}
-
-function addVenta() {
-    const tbody = document.getElementById("ventas-body");
-    const tr = document.createElement("tr");
-
-    const tdProd = document.createElement("td");
-    tdProd.appendChild(crearSelectProductos());
-
-    const tdCant = document.createElement("td");
-    tdCant.contentEditable = "true";
-
-    tr.appendChild(tdProd);
-    tr.appendChild(tdCant);
-
-    tbody.appendChild(tr);
-    saveArea("ventas");
-}
-
-function addCortesia() {
-    const tbody = document.getElementById("cortesias-body");
-    const tr = document.createElement("tr");
-
-    // --- Celda producto ---
-    const tdProd = document.createElement("td");
-    tdProd.appendChild(crearSelectProductos());
-
-    // --- Celda cantidad ---
-    const tdCant = document.createElement("td");
-    tdCant.contentEditable = "true";
-    tdCant.textContent = "0"; // para que aparezca visible como campo
-
-    // Añadir celdas a la fila
-    tr.appendChild(tdProd);
-    tr.appendChild(tdCant);
-
-    // Añadir fila
-    tbody.appendChild(tr);
-
-    // Guardado automático
-    saveArea("cortesias");
-}
-
-function addMesa() {
-    const tbody = document.getElementById("mesas-body");
-    const tr = document.createElement("tr");
-
-    const tdProd = document.createElement("td");
-    tdProd.appendChild(crearSelectProductos());
-
-    const tdCant = document.createElement("td");
-    tdCant.contentEditable = "true";
-
-    tr.appendChild(tdProd);
-    tr.appendChild(tdCant);
-
-    tbody.appendChild(tr);
-    saveArea("mesas");
-}
-
-function addFinal(areaId) {
-    const tbody = document.getElementById(`${areaId}-body`);
-    const tr = document.createElement("tr");
-
-    const tdProd = document.createElement("td");
-    tdProd.appendChild(crearSelectProductos());
-
-    const tdCant = document.createElement("td");
-    tdCant.contentEditable = "true";
-
-    tr.appendChild(tdProd);
-    tr.appendChild(tdCant);
-
-    tbody.appendChild(tr);
-    saveArea(areaId);
-}
-
-// =========================
-//      GUARDAR Y CARGAR
-// =========================
-function saveArea(areaId) {
-    const tbody = document.getElementById(`${areaId}-body`);
-    if(!tbody) return;
-
-    const rows = [...tbody.querySelectorAll("tr")].map(tr => {
-        const tds = tr.querySelectorAll("td");
-        return [...tds].map(td => {
-            const select = td.querySelector(".select-wrapper");
-            if(select) return select.value;
-            return td.textContent;
-        });
-    });
-
-    localStorage.setItem(areaId, JSON.stringify(rows));
-}
-
-function loadArea(areaId) {
-    const tbody = document.getElementById(`${areaId}-body`);
-    if(!tbody) return;
-
-    const data = JSON.parse(localStorage.getItem(areaId) || "[]");
-    if(data.length === 0) return;
-
-    tbody.innerHTML = "";
-    data.forEach(row => {
-        const tr = document.createElement("tr");
-        row.forEach((text, i) => {
-            const td = document.createElement("td");
-
-            if(i === 0 && (tbody.id.includes("area") || tbody.id.includes("ventas") || tbody.id.includes("mesas") || tbody.id.includes("final") || tbody.id.includes("cortesias"))) {
-                td.appendChild(crearSelectProductos(text));
-            } else {
-                td.textContent = text;
-                td.contentEditable = true;
-
-                if(i === 1 || i === 2) {
-                    td.oninput = () => {
-                        const entregada = tr.children[1];
-                        const devuelta = tr.children[2];
-                        const uso = tr.children[3];
-                        const e = parseFloat(entregada.textContent)||0;
-                        const d = parseFloat(devuelta.textContent)||0;
-                        uso.textContent = e - d;
-                        saveArea(areaId);
-                    };
-                }
-            }
-
-            tr.appendChild(td);
-        });
-
-        if(tbody.id.includes("area")) {
-            const tdUso = tr.children[3] || document.createElement("td");
-            tdUso.style.fontWeight = "bold";
-            if(!tr.children[3]) tr.appendChild(tdUso);
-
-            const e = parseFloat(tr.children[1].textContent)||0;
-            const d = parseFloat(tr.children[2].textContent)||0;
-            tdUso.textContent = e - d;
-        }
-
-        tbody.appendChild(tr);
-    });
-}
-
-// =========================
-//      BOTONES PRINCIPALES
-// =========================
-saveAllBtn.addEventListener("click", () => {
-    const allAreas = [
-        "conteo","pedidos",
-        "area-basines","area-cumpleanos","area-vasos",
-        "ventas","mesas","cortesias",
-        "final-pacena","final-monster","final-schweppes","final-deposito","final-lavaplatos"
-    ];
-    allAreas.forEach(areaId => saveArea(areaId));
-    showToast("💾 Datos guardados exitosamente");
-
-});
-
-cuadrarBtn.addEventListener("click", () => {
-    const consumoAreas = [
-        "area-basines","area-cumpleanos","area-vasos",
-        "ventas","mesas","cortesias"
-    ];
-
-    const conteoData = JSON.parse(localStorage.getItem("conteo") || "[]");
-    const pedidosData = JSON.parse(localStorage.getItem("pedidos") || "[]");
-
-    const totalInicial = {};
-    conteoData.forEach(row => {
-        const producto = row[0].trim();
-        const cantidad = parseFloat(row[1]) || 0;
-        totalInicial[producto] = cantidad;
-    });
-    pedidosData.forEach(row => {
-        const producto = row[0].trim();
-        const cantidad = parseFloat(row[1]) || 0;
-        if(totalInicial[producto] !== undefined){
-            totalInicial[producto] += cantidad;
-        } else {
-            totalInicial[producto] = cantidad;
-        }
-    });
-
-    consumoAreas.forEach(area => {
-        const areaData = JSON.parse(localStorage.getItem(area) || "[]");
-        areaData.forEach(row => {
-            const producto = row[0].trim();
-            let uso = 0;
-
-            if(area === "ventas" || area === "mesas" || area === "cortesias") {
-                uso = parseFloat(row[1]) || 0;
-            } else {
-                const entregada = parseFloat(row[1]) || 0;
-                const devuelta = parseFloat(row[2]) || 0;
-                uso = entregada - devuelta;
-            }
-
-            if(totalInicial[producto] !== undefined){
-                totalInicial[producto] -= uso;
-            }
-        });
-    });
-
-    const finales = ["final-pacena","final-monster","final-schweppes","final-deposito","final-lavaplatos"];
-    const reporte = {};
-
-    finales.forEach(finalArea => {
-        const finalData = JSON.parse(localStorage.getItem(finalArea) || "[]");
-        finalData.forEach(row => {
-            const producto = row[0].trim();
-            const cantidadFinal = parseFloat(row[1]) || 0;
-            if(!reporte[producto]) reporte[producto] = { esperado: totalInicial[producto] || 0, final: 0 };
-            reporte[producto].final += cantidadFinal;
-        });
-    });
-
-    const tbody = document.querySelector("#reporte-cuadre tbody");
-    tbody.innerHTML = "";
-    Object.keys(reporte).forEach(producto => {
-        const r = reporte[producto];
-        const tr = document.createElement("tr");
-        const diferencia = r.final - r.esperado;
-
-        let textoDiferencia = "";
-        let color = "";
-
-        if(diferencia === 0){
-            textoDiferencia = `✅ Cuadra`;
-            color = "lightgreen";
-        } else if(diferencia > 0){
-            textoDiferencia = `⚠️ Sobrante: ${diferencia}`;
-            color = "orange";
-        } else {
-            textoDiferencia = `❌ Faltante: ${Math.abs(diferencia)}`;
-            color = "red";
-        }
-
-        tr.innerHTML = `
-            <td>${producto}</td>
-            <td>${r.esperado}</td>
-            <td>${r.final}</td>
-            <td style="color:${color}; font-weight:bold;">${textoDiferencia}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    document.getElementById("modal-cuadre").style.display = "flex";
-});
-
-document.getElementById("close-cuadre").addEventListener("click", () => {
-    document.getElementById("modal-cuadre").style.display = "none";
-});
-window.addEventListener("click", (e) => {
-    if(e.target.id === "modal-cuadre"){
-        document.getElementById("modal-cuadre").style.display = "none";
-    }
-});
-
-// =========================
-//        CARGA INICIAL
-// =========================
-window.onload = () => {
-    const areas = [
-        "conteo","pedidos",
-        "area-basines","area-cumpleanos","area-vasos",
-        "ventas","mesas","cortesias",
-        "final-pacena","final-monster","final-schweppes","final-deposito","final-lavaplatos"
-    ];
-    areas.forEach(area => loadArea(area));
-
-    navItems.forEach(item => {
-        const text = item.textContent;
-        item.textContent = "";
-        text.split("").forEach(letter => {
-            const span = document.createElement("span");
-            span.textContent = letter;
-            item.appendChild(span);
-        });
-    });
+        mensajeBorrado.classList.remove("show");
+        modal.style.display = "none"; // Cerramos el modal para refrescar el flujo
+    }, 1500);
 };
 
-// =========================
-//     BOTON "REINICIAR TODO"
-// =========================
-document.getElementById("reset-all-btn").addEventListener("click", () => {
-    const areas = [
-        "conteo","pedidos",
-        "area-basines","area-cumpleanos","area-vasos",
-        "ventas","mesas","cortesias",
-        "final-pacena","final-monster","final-schweppes","final-deposito","final-lavaplatos"
-    ];
+inicioBtn.onclick = () => {
+    resumenBody.innerHTML = "";
 
-    areas.forEach(area => localStorage.removeItem(area));
+    productosBase.forEach(prod => {
+        // Usamos Number() para asegurar que sean números y no texto
+        // Si el valor no existe o está vacío, ponemos 0
+        const inicial = Number(dataGuardada[`${prod}_conteo`]) || 0;
+        const ingreso = Number(dataGuardada[`${prod}_ingreso`]) || 0;
 
-    areas.forEach(area => {
-        const tbody = document.getElementById(`${area}-body`);
-        if(tbody) {
-            if(area === "conteo" || area === "pedidos") {
-                tbody.querySelectorAll("tr").forEach(tr => {
-                    tr.querySelectorAll("td").forEach((td, i) => {
-                        if(i > 0) td.textContent = "";
-                    });
-                });
-            } else {
-                tbody.innerHTML = "";
-            }
+        // Ahora la suma será matemática pura: 10 + 5 = 15 (no "105")
+        const sumaTotal = inicial + ingreso;
+
+        if (sumaTotal > 0) {
+            const item = document.createElement("div");
+            item.className = "resumen-item";
+
+            item.innerHTML = `
+                <span class="producto">${prod}</span>
+                <span class="inicio-stock" style="font-weight: bold; color: #d4af37;">${sumaTotal}</span>
+            `;
+
+            resumenBody.appendChild(item);
         }
     });
 
-    showToast("✔ Todo se ha reiniciado correctamente");
+    document.querySelector("#modalInicio h2").textContent = "CONTEO INICIAL + INGRESOS";
+    modalInicio.style.display = "block";
+};
+
+
+document.getElementById("closeInicio").onclick = () => {
+  modalInicio.style.display = "none";
+};
+
+window.addEventListener("click", e => {
+  if (e.target === modalInicio) modalInicio.style.display = "none";
 });
-// =========================
-//   GENERAR PDF DEL CUADRE
-// =========================
+usoBtn.onclick = () => {
+  resumenBody.innerHTML = "";
+
+  productosBase.forEach(prod => {
+    let totalUso = 0;
+
+    // Ventas
+    totalUso += parseInt(dataGuardada[`${prod}_ventas`]) || 0;
+
+    // Mesas
+    totalUso += parseInt(dataGuardada[`${prod}_mesas`]) || 0;
+
+    // Cortesías
+    totalUso += parseInt(dataGuardada[`cortesias_${prod}`]) || 0;
+
+    // Áreas (uso ya calculado)
+    totalUso += parseInt(dataGuardada[`${prod}_uso`]) || 0;
+
+    if (totalUso > 0) {
+      const item = document.createElement("div");
+      item.className = "resumen-item";
+      item.innerHTML = `
+        <span class="producto">${prod}</span>
+        <span class="inicio-stock">${totalUso}</span>
+      `;
+      resumenBody.appendChild(item);
+    }
+  });
+
+  document.querySelector("#modalInicio h2").textContent = "USO TOTAL";
+  modalInicio.style.display = "block";
+};
+finalBtn.onclick = () => {
+  resumenBody.innerHTML = "";
+
+  productosBase.forEach(prod => {
+    let totalFinal = 0;
+
+    for (let i = 0; i < 5; i++) {
+      totalFinal += parseInt(dataGuardada[`${prod}_final_${i}`]) || 0;
+    }
+
+    if (totalFinal > 0) {
+      const item = document.createElement("div");
+      item.className = "resumen-item";
+      item.innerHTML = `
+        <span class="producto">${prod}</span>
+        <span class="inicio-stock">${totalFinal}</span>
+      `;
+      resumenBody.appendChild(item);
+    }
+  });
+
+  document.querySelector("#modalInicio h2").textContent = "TOTAL FINAL POR PRODUCTO";
+  modalInicio.style.display = "block";
+};
+const reporteBtn = document.getElementById("reporteBtn");
+const modalReporte = document.getElementById("modalReporte");
+const cuadreBody = document.getElementById("cuadreBody");
+const closeReporte = document.getElementById("closeReporte");
+
+// --- FUNCIÓN PARA DIBUJAR LAS TARJETAS EN LA PÁGINA ---
+function renderizarTarjetas() {
+    contenedorReportes.innerHTML = "";
+
+    historialReportes.slice().reverse().forEach((rep, index) => {
+        const realIndex = historialReportes.length - 1 - index;
+
+        const card = document.createElement("div");
+        card.className = "card-reporte";
+        card.style.position = "relative";
+
+        // Checkbox
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "select-reporte";
+        checkbox.dataset.index = realIndex;
+        checkbox.style.position = "absolute";
+        checkbox.style.top = "10px";
+        checkbox.style.left = "10px";
+        card.appendChild(checkbox);
+
+        // Botón de eliminar
+        const btnEliminar = document.createElement("span");
+        btnEliminar.innerHTML = "✕";
+        btnEliminar.style.position = "absolute";
+        btnEliminar.style.top = "6px";          // más cerca del borde superior
+        btnEliminar.style.right = "6px";        // más cerca del borde derecho
+        btnEliminar.style.cursor = "pointer";
+        btnEliminar.style.color = "red";
+        btnEliminar.style.fontSize = "20px";    // más grande
+        btnEliminar.style.fontWeight = "bold";  // más visible
+        btnEliminar.style.userSelect = "none";  // evita selección accidental
+        btnEliminar.onclick = (e) => {
+            e.stopPropagation(); // evita abrir el modal al hacer clic
+            if(confirm("¿Deseas eliminar este reporte?")) {
+                historialReportes.splice(realIndex, 1);
+                localStorage.setItem("historialReportes", JSON.stringify(historialReportes));
+                renderizarTarjetas();
+            }
+        };
+        card.appendChild(btnEliminar);
 
 
-document.getElementById("download-pdf-btn").addEventListener("click", () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "mm", "a4");
+        // Contenido del reporte
+        const content = document.createElement("div");
+        content.innerHTML = `
+            <h4>Reporte de productos</h4>
+            <p><strong>📅 Fecha:</strong> ${rep.fecha}</p>
+            <p><strong>⏰ Hora:</strong> ${rep.hora}</p>
+            <div style="margin-top:10px; font-size:0.8em; color:#d4af37;">Ver detalles →</div>
+        `;
+        card.appendChild(content);
 
-    const logo = new Image();
-    logo.src = "1763002036643.png"; 
-
-    const now = new Date();
-    const fecha = now.toLocaleDateString("es-ES");
-    const hora = now.toLocaleTimeString("es-ES");
-
-    logo.onload = () => {
-
-        const drawHeader = () => {
-            // Logo más grande
-            doc.addImage(logo, "PNG", 10, 10, 40, 40);
-
-            // Titulo
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(22);
-            doc.text("PACHA SUNSET", 60, 25);
-
-            // Fecha y hora
-            doc.setFontSize(12);
-            doc.setFont("helvetica", "normal");
-            doc.text(`Fecha: ${fecha}   Hora: ${hora}`, 60, 35);
+        // Abrir modal al hacer clic fuera del checkbox o eliminar
+        card.onclick = (e) => {
+            if(e.target.tagName.toLowerCase() !== "input" && e.target !== btnEliminar) {
+                mostrarReporteGuardado(rep);
+            }
         };
 
-        drawHeader(); // Primera página
-
-        // -------------------------
-        // ARMAR TABLA
-        // -------------------------
-        const rows = [];
-        document.querySelectorAll("#reporte-cuadre tbody tr").forEach(tr => {
-            const prod = tr.children[0].textContent.trim();
-            const esperado = parseFloat(tr.children[1].textContent.trim());
-            const final = parseFloat(tr.children[2].textContent.trim());
-
-            let estado = "";
-            let cantidad = 0;
-
-            if (final > esperado) {
-                estado = "Sobrante";
-                cantidad = final - esperado;
-            } else if (final < esperado) {
-                estado = "Faltante";
-                cantidad = esperado - final;
-            } else {
-                estado = "Cuadra";
-                cantidad = 0;
-            }
-
-            rows.push([prod, esperado, final, estado, cantidad]);
-        });
-
-        // -------------------------
-        // TABLA PDF CON COLORES
-        // -------------------------
-        doc.autoTable({
-            startY: 50,
-            head: [["Producto", "Esperado", "Final", "Estado", "Cantidad"]],
-            body: rows,
-            styles: { fontSize: 14, cellPadding: 4, halign: "center" },
-            headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontSize: 14 },
-            alternateRowStyles: { fillColor: [245, 245, 245] },
-            margin: { top: 15 },
-
-            didParseCell: function (data) {
-                // Solo colorear la columna Estado (índice 3)
-                if (data.column.index === 3 && data.cell.section === 'body') {
-                    const val = data.cell.raw;
-                    if (val === "Faltante") data.cell.styles.textColor = [255, 0, 0];       // rojo brillante
-                    if (val === "Sobrante") data.cell.styles.textColor = [255, 165, 0];     // naranja
-                    if (val === "Cuadra") data.cell.styles.textColor = [0, 128, 0];         // verde llamativo
-                    data.cell.styles.fontStyle = 'bold';
-                }
-            },
-
-            didDrawPage: function (data) {
-                // Solo en la primera página se dibuja encabezado completo
-                if (data.pageNumber === 1) drawHeader();
-            }
-        });
-        const timestamp = `${fecha.replace(/\//g, "-")}_${hora.replace(/:/g, "-")}`;
-        doc.save(`Reporte_producto_PACHA_${timestamp}.pdf`);
-    };
-});
-pdfFinalBtn.addEventListener("click", () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "mm", "a4");
-
-    const logo = new Image();
-    logo.src = "1763002036643.png";
-
-    const now = new Date();
-    const fecha = now.toLocaleDateString("es-ES");
-    const hora = now.toLocaleTimeString("es-ES");
-
-    logo.onload = () => {
-
-        // ENCABEZADO
-        doc.addImage(logo, "PNG", 10, 10, 40, 40);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.text("PACHA SUNSET", 60, 25);
-
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Fecha: ${fecha}   Hora: ${hora}`, 60, 35);
-
-        // ====================================
-        //  ORDEN DE PRODUCTOS → CONTEO INICIAL
-        // ====================================
-        const conteoData = JSON.parse(localStorage.getItem("conteo") || "[]");
-        const ordenProductos = conteoData.map(r => r[0].trim());
-
-        // ================
-        //   CALCULO FINAL
-        // ================
-        const finales = [
-            "final-pacena","final-monster","final-schweppes",
-            "final-deposito","final-lavaplatos"
-        ];
-
-        const finalSum = {};
-
-        finales.forEach(area => {
-            const data = JSON.parse(localStorage.getItem(area) || "[]");
-
-            data.forEach(row => {
-                const prod = row[0].trim();
-                const cant = parseFloat(row[1]) || 0;
-
-                if (!finalSum[prod]) finalSum[prod] = 0;
-                finalSum[prod] += cant;
-            });
-        });
-
-        // Construir tabla ORDENADA
-        const rows = ordenProductos.map(prod => [
-            prod,
-            finalSum[prod] || 0
-        ]);
-
-        // ===============================
-        //         TABLA PDF SIMPLE
-        // ===============================
-        doc.autoTable({
-            startY: 55,
-            head: [["Producto", "Conteo Final"]],
-            body: rows,
-            styles: { fontSize: 14, cellPadding: 4, halign: "center" },
-            headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] }
-        });
-
-        doc.save("Conteo_Final_PACHA.pdf");
-    };
-});
-
-// =========================
-//   PDF CONTEO + PEDIDOS
-// =========================
-
-document.getElementById("btn-pdf-conteo").addEventListener("click", () => {
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "mm", "a4");
-
-    const logo = new Image();
-    logo.src = "1763002036643.png";
-
-    const now = new Date();
-    const fecha = now.toLocaleDateString("es-ES");
-    const hora = now.toLocaleTimeString("es-ES");
-
-    logo.onload = () => {
-
-        // Header
-        doc.addImage(logo, "PNG", 10, 10, 40, 40);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.text("PACHA SUNSET", 60, 25);
-
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Fecha: ${fecha}   Hora: ${hora}`, 60, 35);
-
-
-        // ============================
-        //   SUMAR CONTEO + PEDIDOS
-        // ============================
-
-        const total = {};
-
-        // --- Conteo Inicial ---
-        document.querySelectorAll("#conteo-body tr").forEach(tr => {
-            const prod = tr.children[0].textContent.trim();
-            const cant = parseFloat(tr.children[1]?.textContent.trim()) || 0;
-
-            if (!total[prod]) total[prod] = 0;
-            total[prod] += cant;
-        });
-
-        // --- Pedidos Nuevos ---
-        document.querySelectorAll("#pedidos-body tr").forEach(tr => {
-            const prod = tr.children[0].textContent.trim();
-            const cant = parseFloat(tr.children[1]?.textContent.trim()) || 0;
-
-            if (!total[prod]) total[prod] = 0;
-            total[prod] += cant;
-        });
-
-        // Convertir objeto → tabla
-        const rows = Object.keys(total).map(prod => [
-            prod,
-            total[prod]
-        ]);
-
-        // ============================
-        //        TABLA PDF
-        // ============================
-        doc.autoTable({
-            startY: 55,
-            head: [["Producto", "Cantidad Total (Inicial + Pedidos)"]],
-            body: rows,
-            styles: { fontSize: 13, cellPadding: 4, halign: "center" },
-            headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255] }
-        });
-
-        doc.save("Conteo_Inicial_Completo_PACHA.pdf");
-    };
-
-});
-// BOTÓN GUARDAR
-document.getElementById("btn-guardar").addEventListener("click", () => {
-    showToast("💾 Datos guardados correctamente");
-    // aquí va tu lógica de guardar
-});
-
-// BOTÓN CUADRAR
-document.getElementById("btn-cuadrar").addEventListener("click", () => {
-    showToast("📊 Generando Cuadre...");
-    // aquí puedes llamar tu función del modal de cuadre
-});
-
-// BOTÓN RESETEAR
-document.getElementById("btn-reset").addEventListener("click", () => {
-    if (confirm("¿Seguro deseas reiniciar todos los datos?")) {
-        showToast("♻ Datos reiniciados");
-        // aquí va tu función de reinicio
-    }
-});
-// =========================
-//  GENERAR REPORTE TOTAL
-//  (Suma areas + ventas + cortesias + mesas)
-// =========================
-
-// Reemplaza las listas vacías por cálculo desde localStorage / DOM
-function obtenerDatosDeArea(areaId) {
-    // lee el array guardado en localStorage (formato: [[prod,entregada,devuelta], ...])
-    return JSON.parse(localStorage.getItem(areaId) || "[]");
+        contenedorReportes.appendChild(card);
+    });
 }
 
-function obtenerDatosSimples(areaId) {
-    // formato: [[prod,cantidad], ...]
-    return JSON.parse(localStorage.getItem(areaId) || "[]");
-}
-
-function calcularTotalesUso() {
-    const totales = {}; // { producto: cantidad }
-
-    // 1) Áreas con entregada/devuelta
-    const areas = ["area-basines","area-cumpleanos","area-vasos"];
-    areas.forEach(areaId => {
-        const rows = obtenerDatosDeArea(areaId);
-        rows.forEach(r => {
-            const producto = (r[0] || "").toString().trim();
-            const entregada = parseFloat(r[1]) || 0;
-            const devuelta = parseFloat(r[2]) || 0;
-            const uso = entregada - devuelta;
-            if (!producto) return;
-            if (!totales[producto]) totales[producto] = 0;
-            totales[producto] += uso;
-        });
-    });
-
-    // 2) Ventas, Cortesias, Mesas (formato prod,cantidad)
-    const listasSimples = ["ventas","cortesias","mesas"];
-    listasSimples.forEach(areaId => {
-        const rows = obtenerDatosSimples(areaId);
-        rows.forEach(r => {
-            const producto = (r[0] || "").toString().trim();
-            const cantidad = parseFloat(r[1]) || 0;
-            if (!producto) return;
-            if (!totales[producto]) totales[producto] = 0;
-            totales[producto] += cantidad;
-        });
-    });
-
-    return totales;
-}
-
-function generarReportePDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p","mm","a4");
-
-    const now = new Date();
-    const fecha = now.toLocaleDateString("es-ES");
-    const hora = now.toLocaleTimeString("es-ES");
-
-    // Header simple
-    doc.setFontSize(18);
-    doc.text("Reporte Total de Uso - PACHA SUNSET", 14, 18);
-    doc.setFontSize(11);
-    doc.text(`Fecha: ${fecha}   Hora: ${hora}`, 14, 26);
-
-    // Calcular totales reales
-    const totales = calcularTotalesUso();
-
-    // Convertir a filas para la tabla y ordenar por nombre
-    const rows = Object.keys(totales).sort((a,b)=> a.localeCompare(b)).map(prod => {
-        // redondear a 2 decimales si corresponde; si entero mostrar entero
-        const cantidadRaw = totales[prod];
-        const cantidad = Number.isInteger(cantidadRaw) ? cantidadRaw : Math.round(cantidadRaw * 100) / 100;
-        return [prod, String(cantidad)];
-    });
-
-    // Si no hay datos, mostrar mensaje
-    if (rows.length === 0) {
-        doc.setFontSize(12);
-        doc.text("No se encontraron registros en áreas, ventas, cortesías o mesas.", 14, 40);
-        doc.save("reporte_total_uso.pdf");
-        showToast("⚠️ No hay datos para generar el reporte");
+document.getElementById("btnReporteConsolidado").onclick = async () => {
+    const checkboxes = document.querySelectorAll(".select-reporte:checked");
+    if(checkboxes.length === 0){
+        alert("Selecciona al menos un reporte para consolidar.");
         return;
     }
 
-    // Usar autoTable para presentación
-    doc.autoTable({
-        startY: 36,
-        head: [["Producto", "Cantidad Usada"]],
-        body: rows,
-        styles: { fontSize: 11, cellPadding: 4 },
-        headStyles: { fillColor: [0,0,0], textColor: [255,255,255] },
-        margin: { left: 14, right: 14 },
-        didDrawPage: function (data) {
-            // pie de página con número de página
-            const pageCount = doc.internal.getNumberOfPages();
-            const str = "Página " + pageCount;
-            doc.setFontSize(9);
-            doc.text(str, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 8);
-        }
+    // Sumar uso de productos
+    const usoConsolidado = {};
+    productosBase.forEach(prod => usoConsolidado[prod] = 0);
+
+    checkboxes.forEach(cb => {
+        const rep = historialReportes[cb.dataset.index];
+        rep.data.forEach(item => {
+            usoConsolidado[item.producto] += item.uso;
+        });
     });
 
-    doc.save("reporte_total_uso.pdf");
-    showToast("📄 PDF generado correctamente");
+    // Filtrar solo productos con uso > 0
+    const filas = productosBase
+        .filter(prod => usoConsolidado[prod] > 0)
+        .map(prod => [prod, usoConsolidado[prod]]);
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const ahora = new Date();
+    const fechaStr = ahora.toLocaleDateString();
+    const horaStr = ahora.toLocaleTimeString();
+
+    // Logo
+    const logo = new Image();
+    logo.src = "1762998569035-removebg-preview.png"; // Ajusta ruta si es necesario
+    logo.onload = () => {
+        doc.addImage(logo, 'PNG', 14, 10, 15, 15);
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text("Pacha Sunset", 34, 18);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Fecha: ${fechaStr}    Hora: ${horaStr}`, 200, 18, { align: "right" });
+
+        doc.setFontSize(14);
+        doc.text("USO CONSOLIDADO DE PRODUCTOS", 14, 35);
+
+        // Tabla
+        const columnas = ["Producto", "Cantidad"];
+        doc.autoTable({
+            startY: 40,
+            head: [columnas],
+            body: filas,
+            theme: 'grid',
+            headStyles: { fillColor: [255, 140, 66], halign: 'center', valign: 'middle' },
+            columnStyles: {
+                0: { halign: 'center', valign: 'middle' },  // Producto centrado
+                1: { halign: 'center', valign: 'middle' }   // Cantidad centrada
+            },
+            styles: { fontSize: 10, cellPadding: 3 }
+        });
+
+        const nombrePDF = `Uso_Consolidado_${fechaStr.replace(/\//g,"-")}_${ahora.getHours()}h${ahora.getMinutes()}m.pdf`;
+        doc.save(nombrePDF);
+    };
+};
+
+
+// Nueva función para eliminar un reporte específico
+function eliminarReporte(event, index) {
+  event.stopPropagation(); // Evita que se abra el reporte al hacer clic en la X
+  if (confirm("¿Estás seguro de eliminar este reporte permanentemente?")) {
+      historialReportes.splice(index, 1);
+      localStorage.setItem("historialReportes", JSON.stringify(historialReportes));
+      renderizarTarjetas();
+  }
 }
 
-// Conectar el botón creado dinámicamente pdfFinalBtn (ya lo agregaste al panel)
-try {
-    if (typeof pdfFinalBtn !== "undefined" && pdfFinalBtn instanceof HTMLElement) {
-        // sobreescribimos comportamiento anterior para que genere el reporte total
-        pdfFinalBtn.removeEventListener && pdfFinalBtn.removeEventListener("click", null);
-        pdfFinalBtn.addEventListener("click", generarReportePDF);
-        // si quieres un botón separado en vez de usar pdfFinalBtn, coméntame y lo cambio
-    } else {
-        // fallback: vincular al botón dentro del modal-cuadre si existe
-        const btnModalDownload = document.getElementById("download-pdf-btn");
-        if (btnModalDownload) btnModalDownload.addEventListener("click", generarReportePDF);
+// --- BOTÓN HACER REPORTE (MODIFICADO) ---
+reporteBtn.onclick = () => {
+    const now = new Date();
+    const fecha = now.toLocaleDateString();
+    const hora = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const id = `${now.toISOString()}`;
+
+    const dataReporte = [];
+
+    productosBase.forEach(prod => {
+        const inicial = (parseInt(dataGuardada[`${prod}_conteo`]) || 0) + 
+                        (parseInt(dataGuardada[`${prod}_ingreso`]) || 0);
+
+        const uso = (parseInt(dataGuardada[`${prod}_ventas`]) || 0) + 
+                    (parseInt(dataGuardada[`${prod}_mesas`]) || 0) + 
+                    (parseInt(dataGuardada[`cortesias_${prod}`]) || 0) + 
+                    (parseInt(dataGuardada[`${prod}_uso`]) || 0);
+
+        let final = 0;
+        for (let i = 0; i < 5; i++) {
+            final += parseInt(dataGuardada[`${prod}_final_${i}`]) || 0;
+        }
+
+        const esperado = inicial - uso;
+        let estadoStr = "";
+        if (esperado === final) estadoStr = "✅ Cuadra";
+        else if (esperado > final) estadoStr = `❌ Falta ${esperado - final}`;
+        else estadoStr = `⚠️ Sobra ${final - esperado}`;
+
+        dataReporte.push({
+            producto: prod,
+            inicial: inicial,
+            uso: uso,
+            esperado: esperado,
+            final: final,
+            estado: estadoStr
+        });
+    });
+
+    // Guardar en el historial
+    const nuevoReporte = { id, fecha, hora, data: dataReporte };
+    historialReportes.push(nuevoReporte);
+    localStorage.setItem("historialReportes", JSON.stringify(historialReportes));
+
+    // ACTUALIZAR INTERFAZ
+    renderizarTarjetas(); // Crea la tarjeta en la pantalla principal
+    mostrarReporteGuardado(nuevoReporte); // Abre el modal con el detalle
+};
+
+function mostrarReporteGuardado(reporte) {
+    cuadreBody.innerHTML = "";
+    modalReporte.style.display = "block";
+
+    // Crear Encabezado
+    const header = document.createElement("div");
+    header.className = "cuadre-header";
+  
+    ["Producto", "Inicial", "Uso", "Esperado", "Fin", "Estado"].forEach(text => {
+        const span = document.createElement("span");
+        span.textContent = text;
+        header.appendChild(span);
+    });
+    cuadreBody.appendChild(header);
+
+    // Filas de productos
+    reporte.data.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "cuadre-item";
+
+        const estadoClass = item.estado.includes("Cuadra") ? "cuadra" : 
+                            item.estado.includes("Falta") ? "falta" : "sobra";
+
+        [item.producto, item.inicial, item.uso, item.esperado, item.final, item.estado].forEach((val, idx) => {
+            const span = document.createElement("span");
+            span.textContent = val;
+
+            // Alinear el nombre del producto a la izquierda, los demás al centro
+            if (idx === 0) span.style.textAlign = "left";
+            if (idx === 5) span.className = `resultado-cuadre ${estadoClass}`;
+
+            row.appendChild(span);
+        });
+        cuadreBody.appendChild(row);
+    });
+}
+
+// Cerrar modales
+closeReporte.onclick = () => modalReporte.style.display = "none";
+window.addEventListener("click", (e) => {
+    if (e.target === modalReporte) modalReporte.style.display = "none";
+});
+// --- AL FINAL DE TODO TU SCRIPT ---
+
+// Esta función se encarga de que al abrir la web, se lean los datos guardados
+document.addEventListener("DOMContentLoaded", () => {
+    renderizarTarjetas();
+});
+
+// Ajuste en el cierre del modal (para que sea más limpio)
+closeReporte.onclick = () => {
+    modalReporte.style.display = "none";
+};
+
+// Si haces clic fuera del contenido blanco del modal, también se cierra
+window.addEventListener("click", (e) => {
+    if (e.target === modalReporte) {
+        modalReporte.style.display = "none";
     }
-} catch(e){
-    console.error("Error al conectar botón PDF:", e);
+});
+// Botones para descargar PDF
+document.getElementById("btnDescargarPDF_Inicio").onclick = generarPDF;
+document.getElementById("btnDescargarPDF_Reporte").onclick = generarPDF;
+
+async function generarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const rutaLogo = "1762998569035-removebg-preview.png";
+
+    const cargarImagen = (url) => new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => resolve(img);
+        img.onerror = (err) => reject(err);
+    });
+
+    let titulo = "REPORTE";
+    let filas = [];
+    let columnas = [];
+
+    // --- Recolección de datos ---
+    const itemsCuadre = cuadreBody.querySelectorAll(".cuadre-item");
+    if (itemsCuadre.length > 0 && modalReporte.style.display !== "none") {
+        titulo = "REPORTE DE CUADRE";
+        columnas = ["Producto", "Inicial", "Uso", "Esperado", "Final", "Estado"];
+        itemsCuadre.forEach(item => {
+            const spans = Array.from(item.querySelectorAll("span"));
+            if (spans.length > 0) {
+                const cells = spans.map(s => s.textContent.trim());
+                // Separar Estado y número si están juntos
+                let estado = "";
+                let numero = "";
+                if (cells[5]) {
+                    const match = cells[5].match(/(Cuadra|Falta|Sobra)/i);
+                    estado = match ? match[0] : "";
+                    numero = cells[5].replace(/[^0-9]/g, ""); // solo número
+                }
+                filas.push([
+                    cells[0] || "",
+                    cells[1] || "",
+                    cells[2] || "",
+                    cells[3] || "",
+                    cells[4] || "",
+                    { estado: estado, numero: numero }
+                ]);
+            }
+        });
+    } else {
+        const itemsResumen = resumenBody.querySelectorAll(".resumen-item");
+        if (itemsResumen.length > 0) {
+            titulo = document.querySelector("#modalInicio h2")?.textContent || "RESUMEN";
+            columnas = ["Producto", "Cantidad"];
+            itemsResumen.forEach(item => {
+                const nombre = item.querySelector(".producto")?.textContent.trim();
+                const cant = item.querySelector(".inicio-stock")?.textContent.trim();
+                if (nombre) filas.push([nombre, cant]);
+            });
+        }
+    }
+
+    if (filas.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+    }
+
+    // --- Encabezado ---
+    try {
+        const logoImg = await cargarImagen(rutaLogo);
+        doc.addImage(logoImg, 'PNG', 14, 10, 25, 25);
+    } catch (e) {
+        console.warn("Logo no encontrado, continuando solo con texto.");
+    }
+
+    doc.setFontSize(22);
+    doc.setTextColor(0);
+    doc.text("PACHA SUNSET", 42, 22);
+
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text(titulo, 42, 30);
+
+    const ahora = new Date();
+    const fechaTexto = ahora.toLocaleDateString();
+    const horaTexto = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    doc.setFontSize(9);
+    doc.text(`Fecha: ${fechaTexto} | Hora: ${horaTexto}`, 14, 44);
+
+    // --- Tabla ---
+    doc.autoTable({
+        startY: 48,
+        head: [columnas],
+        body: filas.map(f => f.map(cell => typeof cell === 'object' ? cell.estado : cell)),
+        theme: 'plain',
+        headStyles: { fillColor: [0,0,0], textColor: 255, halign: 'center' },
+        columnStyles: columnas.reduce((acc, col, i) => {
+            acc[i] = { halign: 'center', valign: 'middle' };
+            return acc;
+        }, {}),
+        styles: { fontSize: 9, cellPadding: 3, fontStyle: 'normal' },
+        didParseCell: function(data) {
+            // Alternar color de fila
+            if (data.section === 'body') {
+                data.cell.styles.fillColor = (data.row.index % 2 === 0) ? [240,240,240] : [255,255,255];
+            }
+
+            // Colorear Estado
+            if (data.section === 'body' && columnas.includes("Estado") && data.column.index === columnas.indexOf("Estado")) {
+                const estado = filas[data.row.index][5].estado;
+                const numero = filas[data.row.index][5].numero;
+
+                // Colores ajustados según tu indicación
+                if (estado.includes("Falta")) data.cell.styles.textColor = [231, 76, 60];    // rojo
+                if (estado.includes("Sobra")) data.cell.styles.textColor = [255, 140, 0];    // naranja
+                if (estado.includes("Cuadra")) data.cell.styles.textColor = [40, 167, 69];   // verde
+
+                data.cell.text = [`${estado} ${numero}`]; // texto limpio + número
+                data.cell.styles.fontStyle = 'bold';      // más grueso
+            }
+        }
+
+    });
+
+    // --- Nombre final ---
+    const fechaParaNombre = fechaTexto.replace(/\//g, "-");
+    const horaParaNombre = ahora.getHours() + "h" + ahora.getMinutes() + "m";
+    const nombreFinal = `PachaSunset_${titulo.replace(/ /g, "_")}_${fechaParaNombre}_${horaParaNombre}.pdf`;
+
+    doc.save(nombreFinal);
 }

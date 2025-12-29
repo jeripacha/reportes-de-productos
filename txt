@@ -1,0 +1,32 @@
+// Botones para descargar modal como PDF
+document.getElementById("btnDescargarPDF_Inicio").onclick = () => descargarModalComoPDF("modalInicio");
+document.getElementById("btnDescargarPDF_Reporte").onclick = () => descargarModalComoPDF("modalReporte");
+
+async function descargarModalComoPDF(idModal) {
+    const { jsPDF } = window.jspdf; 
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    const modal = document.getElementById(idModal);
+
+    // Captura del modal con html2canvas
+    const canvas = await html2canvas(modal, {
+        scale: 2,             // mejor resolución
+        useCORS: true,
+        logging: false
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+
+    const imgProps = doc.getImageProperties(imgData);
+    const pdfWidth = doc.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    const ahora = new Date();
+    const fechaParaNombre = ahora.toLocaleDateString().replace(/\//g, "-");
+    const horaParaNombre = ahora.getHours() + "h" + ahora.getMinutes() + "m";
+    const nombreFinal = `PachaSunset_${idModal}_${fechaParaNombre}_${horaParaNombre}.pdf`;
+
+    doc.save(nombreFinal);
+}
