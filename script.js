@@ -24,14 +24,14 @@ const productosBase = [
 ];
 
 const productosMesas = [
-  "Parrales","Viuda","Gyn Amazónico","Flor de caña 5 años","Fernet Buhero",
+  "Parrales","Jager","Viuda","Gyn Amazónico","Flor de caña 5 años","Fernet Buhero",
   "Coca-Cola 2L","Ginger 1.5L","Simba Pomelo","Vodka 1825","Agua Tónica 900 ml"
 ];
 
 const productosAreas = {
-  "Basines": ["Fernet Buhero","Cerveza Huari","Agua Pacha","Vodka 1825","Coca-Cola 3L","Sprite 3L"],
-  "Cumpleaños": ["Flor de caña 5 años","Gyn Frutilla","Parrales","Monster","Sens Limón","Sens Maracuyá"],
-  "Vasos": ["Golden","Latas Paceña","Viuda","Agua Vital Normal","Agua Vital con Gas","Red Label"]
+  "Basines": ["Blue Curacao","Parrales","Sprite 3L"],
+  "Cumpleaños": ["Blue Curacao","Parrales","Sprite 3L"],
+  "Vasos": ["Fernet Buhero","Flor de caña 5 años","Viuda","Agua Vital Normal","Agua Vital con Gas","Ginger 1.5L","Coca-Cola 3L","Sprite 3L","Simba Pomelo","Blue Curacao","Agua Tónica 900 ml","Jager","Pura Vida","Gyn Amazónico","Vodka 1825","Tequila Jose Cuervo"]
 };
 
 // Objeto global para guardar valores de celdas
