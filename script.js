@@ -1,4 +1,24 @@
 const historialReportes = JSON.parse(localStorage.getItem("historialReportes")) || [];
+// ================== INPUT NUMÉRICO (CELULAR) ==================
+function crearInputNumerico(valorInicial, onChange) {
+  const input = document.createElement("input");
+  input.type = "number";
+  input.inputMode = "numeric";
+  input.pattern = "[0-9]*";
+  input.min = "0";
+  input.value = valorInicial || "";
+  input.style.width = "100%";
+  input.style.textAlign = "center";
+  input.style.border = "none";
+  input.style.background = "transparent";
+
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/[^0-9]/g, "");
+    onChange(input.value);
+  });
+
+  return input;
+}
 
 const sidebar = document.getElementById("sidebar");
 const modal = document.getElementById("modal");
@@ -119,23 +139,26 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
         const tdNombre = document.createElement("td");
         tdNombre.textContent = prod;
 
-        const tdConteo = document.createElement("td");
-        tdConteo.contentEditable = "true";
-        tdConteo.textContent = dataGuardada[`${prod}_conteo`] || "";
+          const tdConteo = document.createElement("td");
+          const inputConteo = crearInputNumerico(
+            dataGuardada[`${prod}_conteo`],
+            (valor) => {
+              dataGuardada[`${prod}_conteo`] = valor;
+              localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+            }
+          );
+          tdConteo.appendChild(inputConteo);
 
-        const tdIngreso = document.createElement("td");
-        tdIngreso.contentEditable = "true";
-        tdIngreso.textContent = dataGuardada[`${prod}_ingreso`] || "";
+          const tdIngreso = document.createElement("td");
+          const inputIngreso = crearInputNumerico(
+            dataGuardada[`${prod}_ingreso`],
+            (valor) => {
+              dataGuardada[`${prod}_ingreso`] = valor;
+              localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+            }
+          );
+          tdIngreso.appendChild(inputIngreso);
 
-        // Guardar al escribir
-        tdConteo.addEventListener("input", () => {
-          dataGuardada[`${prod}_conteo`] = tdConteo.textContent;
-          localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
-        });
-        tdIngreso.addEventListener("input", () => {
-          dataGuardada[`${prod}_ingreso`] = tdIngreso.textContent;
-          localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
-        });
 
         row.appendChild(tdNombre);
         row.appendChild(tdConteo);
@@ -144,124 +167,152 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
       });
       return;
     }
+      // ------------------ ÁREAS ------------------
+      if (title.includes("Áreas")) {
+        Object.keys(productosAreas).forEach(area => {
 
-    // ------------------ ÁREAS ------------------
-    if(title.includes("Áreas")) {
-      Object.keys(productosAreas).forEach(area => {
-        const catRow = document.createElement("tr");
-        const catCell = document.createElement("td");
-        catCell.colSpan = 4;
-        catCell.textContent = area;
-        catCell.style.fontWeight = "bold";
-        catCell.style.background = "#ffcccb";
-        catCell.style.textAlign = "center";
-        catRow.appendChild(catCell);
-        tableBody.appendChild(catRow);
+          // Fila título del área
+          const catRow = document.createElement("tr");
+          const catCell = document.createElement("td");
+          catCell.colSpan = 4;
+          catCell.textContent = area;
+          catCell.style.fontWeight = "bold";
+          catCell.style.background = "#ffcccb";
+          catCell.style.textAlign = "center";
+          catRow.appendChild(catCell);
+          tableBody.appendChild(catRow);
 
+          // Encabezados
+          const headerRow = document.createElement("tr");
+          ["Producto", "Entrega", "Devolución", "Uso"].forEach(text => {
+            const th = document.createElement("th");
+            th.textContent = text;
+            headerRow.appendChild(th);
+          });
+          tableBody.appendChild(headerRow);
+
+          productosAreas[area].forEach(prod => {
+            const row = document.createElement("tr");
+
+            // Producto
+            const tdNombre = document.createElement("td");
+            tdNombre.textContent = prod;
+
+            // USO (solo lectura)
+            const tdUso = document.createElement("td");
+            tdUso.textContent = dataGuardada[`${prod}_uso`] || "0";
+            tdUso.style.fontWeight = "600";
+            tdUso.style.textAlign = "center";
+
+            // Función de cálculo
+            const calcularUso = (entrega, devolucion) => {
+              const uso = (parseInt(entrega) || 0) - (parseInt(devolucion) || 0);
+              tdUso.textContent = uso;
+              dataGuardada[`${prod}_uso`] = uso;
+              localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+            };
+
+            // Entrega
+            const tdEntrega = document.createElement("td");
+            const inputEntrega = crearInputNumerico(
+              dataGuardada[`${prod}_entrega`],
+              (valor) => {
+                dataGuardada[`${prod}_entrega`] = valor;
+                localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+                calcularUso(valor, dataGuardada[`${prod}_devolucion`]);
+              }
+            );
+            tdEntrega.appendChild(inputEntrega);
+
+            // Devolución
+            const tdDevolucion = document.createElement("td");
+            const inputDevolucion = crearInputNumerico(
+              dataGuardada[`${prod}_devolucion`],
+              (valor) => {
+                dataGuardada[`${prod}_devolucion`] = valor;
+                localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+                calcularUso(dataGuardada[`${prod}_entrega`], valor);
+              }
+            );
+            tdDevolucion.appendChild(inputDevolucion);
+
+            // Armar fila
+            row.appendChild(tdNombre);
+            row.appendChild(tdEntrega);
+            row.appendChild(tdDevolucion);
+            row.appendChild(tdUso);
+            tableBody.appendChild(row);
+          });
+        });
+
+        return;
+      }
+
+      // ------------------ CORTESÍAS ------------------
+      if(title.includes("Cortesías")) {
         const headerRow = document.createElement("tr");
-        ["Producto","Entrega","Devolución","Uso"].forEach(text => {
+        ["Producto","Cantidad"].forEach(text => {
           const th = document.createElement("th");
           th.textContent = text;
           headerRow.appendChild(th);
         });
-        tableBody.appendChild(headerRow);
+        tableHead.appendChild(headerRow);
 
-        productosAreas[area].forEach(prod => {
+        tableBody.innerHTML = "";
+        addProductBtn.style.display = "block";
+
+        // Reconstruir productos dinámicos
+        productosCortesiasDinamicos.forEach(item => {
           const row = document.createElement("tr");
 
+          // Producto (select)
           const tdNombre = document.createElement("td");
-          tdNombre.textContent = prod;
-
-          const tdEntrega = document.createElement("td");
-          tdEntrega.contentEditable = "true";
-          tdEntrega.textContent = dataGuardada[`${prod}_entrega`] || "";
-
-          const tdDevolucion = document.createElement("td");
-          tdDevolucion.contentEditable = "true";
-          tdDevolucion.textContent = dataGuardada[`${prod}_devolucion`] || "";
-
-          const tdUso = document.createElement("td");
-          tdUso.textContent = dataGuardada[`${prod}_uso`] || "";
-
-          const calcularUso = () => {
-            const entrega = parseInt(tdEntrega.textContent) || 0;
-            const devol = parseInt(tdDevolucion.textContent) || 0;
-            tdUso.textContent = entrega - devol;
-            dataGuardada[`${prod}_uso`] = tdUso.textContent;
-            localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
-          };
-          tdEntrega.addEventListener("input", () => {
-            dataGuardada[`${prod}_entrega`] = tdEntrega.textContent;
-            localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
-            calcularUso();
+          const select = document.createElement("select");
+          productosBase.forEach(prod => {
+            const option = document.createElement("option");
+            option.value = prod;
+            option.textContent = prod;
+            if (prod === item.nombre) option.selected = true;
+            select.appendChild(option);
           });
-          tdDevolucion.addEventListener("input", () => {
-            dataGuardada[`${prod}_devolucion`] = tdDevolucion.textContent;
+          tdNombre.appendChild(select);
+
+          // Cantidad (input numérico)
+          const tdCantidad = document.createElement("td");
+          const inputCantidad = crearInputNumerico(
+            item.cantidad || "",
+            (valor) => {
+              const prodSeleccionado = select.value;
+              dataGuardada[`cortesias_${prodSeleccionado}`] = valor;
+              item.nombre = prodSeleccionado;
+              item.cantidad = valor;
+
+              localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+              localStorage.setItem("productosCortesiasDinamicos", JSON.stringify(productosCortesiasDinamicos.map(p => ({nombre: p.nombre, cantidad: p.cantidad}))));
+            }
+          );
+          tdCantidad.appendChild(inputCantidad);
+
+          // Evento select
+          select.addEventListener("change", () => {
+            const valor = inputCantidad.value;
+            const prodSeleccionado = select.value;
+            dataGuardada[`cortesias_${prodSeleccionado}`] = valor;
+            item.nombre = prodSeleccionado;
+            item.cantidad = valor;
+
             localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
-            calcularUso();
+            localStorage.setItem("productosCortesiasDinamicos", JSON.stringify(productosCortesiasDinamicos.map(p => ({nombre: p.nombre, cantidad: p.cantidad}))));
           });
 
           row.appendChild(tdNombre);
-          row.appendChild(tdEntrega);
-          row.appendChild(tdDevolucion);
-          row.appendChild(tdUso);
+          row.appendChild(tdCantidad);
           tableBody.appendChild(row);
         });
-      });
-      return;
-    }
 
-    // ------------------ CORTESÍAS ------------------
-    if(title.includes("Cortesías")) {
-      const headerRow = document.createElement("tr");
-      ["Producto","Cantidad"].forEach(text => {
-        const th = document.createElement("th");
-        th.textContent = text;
-        headerRow.appendChild(th);
-      });
-      tableHead.appendChild(headerRow);
+        return;
+      }
 
-      tableBody.innerHTML = "";
-      addProductBtn.style.display = "block";
-
-      // Reconstruir productos dinámicos
-      productosCortesiasDinamicos.forEach(item => {
-        const row = document.createElement("tr");
-
-        const tdNombre = document.createElement("td");
-        const select = document.createElement("select");
-        productosBase.forEach(prod => {
-          const option = document.createElement("option");
-          option.value = prod;
-          option.textContent = prod;
-          if (prod === item.nombre) option.selected = true;
-          select.appendChild(option);
-        });
-        tdNombre.appendChild(select);
-
-        const tdCantidad = document.createElement("td");
-        tdCantidad.contentEditable = "true";
-        tdCantidad.textContent = item.cantidad || "";
-
-        const actualizarData = () => {
-          const prodSeleccionado = select.value;
-          dataGuardada[`cortesias_${prodSeleccionado}`] = tdCantidad.textContent;
-          item.nombre = prodSeleccionado;
-          item.cantidad = tdCantidad.textContent;
-
-          localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
-          localStorage.setItem("productosCortesiasDinamicos", JSON.stringify(productosCortesiasDinamicos.map(p => ({nombre: p.nombre, cantidad: p.cantidad}))));
-        };
-        select.addEventListener("change", actualizarData);
-        tdCantidad.addEventListener("input", actualizarData);
-
-        row.appendChild(tdNombre);
-        row.appendChild(tdCantidad);
-        tableBody.appendChild(row);
-      });
-
-      return;
-    }
 
     // ------------------ CONTEO FINAL ------------------
     if(title.toLowerCase().includes("conteo final")) {
@@ -301,17 +352,21 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
         tdNombre.textContent = prod;
         row.appendChild(tdNombre);
 
-        for (let i = 0; i < 5; i++) {
-          const td = document.createElement("td");
-          td.contentEditable = "true";
-          td.textContent = dataGuardada[`${prod}_final_${i}`] || "";
-          td.style.textAlign = "center";
-          td.addEventListener("input", () => {
-            dataGuardada[`${prod}_final_${i}`] = td.textContent;
-            localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
-          });
-          row.appendChild(td);
-        }
+          for (let i = 0; i < 5; i++) {
+            const td = document.createElement("td");
+
+            const input = crearInputNumerico(
+              dataGuardada[`${prod}_final_${i}`],
+              (valor) => {
+                dataGuardada[`${prod}_final_${i}`] = valor;
+                localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+              }
+            );
+
+            td.appendChild(input);
+            row.appendChild(td);
+          }
+
         tableBody.appendChild(row);
       });
 
@@ -325,43 +380,44 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
       return;
     }
 
-    // ------------------ MESAS Y OTROS ------------------
-    const headerRow = document.createElement("tr");
-    ["Producto","Cantidad"].forEach(text => {
-      const th = document.createElement("th");
-      th.textContent = text;
-      headerRow.appendChild(th);
-    });
-    tableHead.appendChild(headerRow);
-
-    let listaProductos = productosBase;
-    let tipoRegistro = "ventas";
-
-    if (title.includes("Mesas")) {
-      listaProductos = productosMesas;
-      tipoRegistro = "mesas";
-    }
-
-    listaProductos.forEach(prod => {
-      const row = document.createElement("tr");
-      const tdNombre = document.createElement("td");
-      tdNombre.textContent = prod;
-      const tdCantidad = document.createElement("td");
-      tdCantidad.contentEditable = "true";
-      tdCantidad.textContent = dataGuardada[`${prod}_${tipoRegistro}`] || "";
-
-      tdCantidad.addEventListener("input", () => {
-        dataGuardada[`${prod}_${tipoRegistro}`] = tdCantidad.textContent;
-        localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+      // ------------------ MESAS Y OTROS ------------------
+      const headerRow = document.createElement("tr");
+      ["Producto","Cantidad"].forEach(text => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headerRow.appendChild(th);
       });
+      tableHead.appendChild(headerRow);
 
-      row.appendChild(tdNombre);
-      row.appendChild(tdCantidad);
-      tableBody.appendChild(row);
-    });
+      let listaProductos = productosBase;
+      let tipoRegistro = "ventas";
+
+      if (title.includes("Mesas")) {
+        listaProductos = productosMesas;
+        tipoRegistro = "mesas";
+      }
+
+      listaProductos.forEach(prod => {
+        const row = document.createElement("tr");
+        const tdNombre = document.createElement("td");
+        tdNombre.textContent = prod;
+
+        const tdCantidad = document.createElement("td");
+        const inputCantidad = crearInputNumerico(
+          dataGuardada[`${prod}_${tipoRegistro}`] || "",
+          (valor) => {
+            dataGuardada[`${prod}_${tipoRegistro}`] = valor;
+            localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+          }
+        );
+        tdCantidad.appendChild(inputCantidad);
+
+        row.appendChild(tdNombre);
+        row.appendChild(tdCantidad);
+        tableBody.appendChild(row);
+      });
   };
 });
-
 // -------------------- AGREGAR PRODUCTO CORTESÍA --------------------
 addProductBtn.onclick = () => {
   const row = document.createElement("tr");
@@ -375,10 +431,17 @@ addProductBtn.onclick = () => {
     select.appendChild(option);
   });
   tdNombre.appendChild(select);
+    const tdCantidad = document.createElement("td");
+    const inputCantidad = crearInputNumerico("", (valor) => {
+        const prodSeleccionado = select.value;
+        dataGuardada[`cortesias_${prodSeleccionado}`] = valor;
+        item.nombre = prodSeleccionado;
+        item.cantidad = valor;
+        localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+        localStorage.setItem("productosCortesiasDinamicos", JSON.stringify(productosCortesiasDinamicos.map(p => ({nombre: p.nombre, cantidad: p.cantidad}))));
+    });
+    tdCantidad.appendChild(inputCantidad);
 
-  const tdCantidad = document.createElement("td");
-  tdCantidad.contentEditable = "true";
-  tdCantidad.textContent = "";
 
   const item = {row, nombre: select.value, cantidad: ""};
   productosCortesiasDinamicos.push(item);
