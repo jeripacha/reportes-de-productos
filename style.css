@@ -278,44 +278,65 @@ table tr:hover select {
 }
 
 
-/* Columna de producto se mantiene normal */
-#productos-table th:first-child {
-    width: 200px;
-    position: static;     /* El primer encabezado no necesita flotar */
-    height: 70px;
-}
-/* Contenedor del scroll */
+/* CONTENEDOR CON SCROLL */
 .table-container {
-    overflow-x: auto;
-    max-width: 100%;
-    position: relative;
-    border: 1px solid #ddd;
+  overflow: auto;
+  max-width: 100%;
+  max-height: 60vh;
+  position: relative;
+  border: 1px solid #ddd;
 }
 
-/* LA CLAVE: Inmovilizar y dar fondo sólido */
-#productos-table th:first-child,
+/* =========================
+   ENCABEZADOS FIJOS ARRIBA
+   ========================= */
+#productos-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  background: #737373;
+  text-align: center;
+}
+
+/* =========================
+   COLUMNA PRODUCTO FIJA
+   ========================= */
 #productos-table td:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 50;            /* Número alto para que nada pase por encima */
-    background-color: #ffffff !important; /* Color sólido para que no sea transparente */
-    border-right: 2px solid #cecece;
-    min-width: 130px;
-    max-width: 150px;
-    white-space: normal;    /* Salto de línea para nombres largos */
+  position: sticky;
+  left: 0;
+  z-index: 95;
+  background-color: #ffffff !important;
+  border-right: 2px solid #cecece;
+  min-width: 150px;
+  max-width: 200px;
+  white-space: normal;
 }
 
-/* Encabezado de la columna fija (Producto) */
-#productos-table th:first-child {
-    z-index: 60;            /* Aún más alto que los TD */
-    background-color: black !important;
+/* =========================
+   ESQUINA SUPERIOR IZQUIERDA
+   (ENCABEZADO PRODUCTO)
+   ========================= */
+#productos-table thead th:first-child {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 110; /* el más alto */
+  background-color: black !important;
+  color: white;
+  border-right: 2px solid #cecece;
+  min-width: 150px;
+  max-width: 200px;
 }
 
-/* Para las celdas donde escribes los números */
+/* =========================
+   CELDAS NORMALES
+   ========================= */
 #productos-table td:not(:first-child) {
-    background-color: #fff; /* Fondo para las celdas móviles */
-    min-width: 100px;
+  background-color: #fff;
+  min-width: 100px;
+  text-align: center;
 }
+
 .modal {
   display: none;
   position: fixed;
@@ -339,8 +360,8 @@ table tr:hover select {
 }
 /* BOTÓN BORRAR TODO */
 .btn-borrar {
-  background: linear-gradient(135deg, #ff3b3b, #c1121f);
-  color: white;
+  background: linear-gradient(90deg, #ff7e5f, #feb47b);
+  color: black;
   border: none;
   padding: 14px 26px;
   font-size: 16px;
@@ -388,8 +409,8 @@ table tr:hover select {
   transform: translateX(-50%) translateY(0);
 }
 .btn-inicio {
-  background: linear-gradient(135deg, #ff3b3b, #c1121f);
-  color: white;
+  background: linear-gradient(90deg, #ff7e5f, #feb47b);
+  color: black;
   border: none;
   padding: 14px 26px;
   font-size: 16px;
@@ -579,7 +600,7 @@ table tr:hover select {
   padding: 12px 25px;
   font-size: 16px;
   font-weight: bold;
-  color: #fff;
+  color: #000000;
   background: linear-gradient(90deg, #ff7e5f, #feb47b);
   border: none;
   border-radius: 50px;
