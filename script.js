@@ -44,14 +44,14 @@ const productosBase = [
 ];
 
 const productosMesas = [
-  "Parrales","Jager","Viuda","Gyn Amazónico","Flor de caña 5 años","Fernet Buhero",
+  "Parrales","Monster","Jager","Viuda","Gyn Amazónico","Flor de caña 5 años","Fernet Buhero",
   "Coca-Cola 2L","Ginger 1.5L","Simba Pomelo","Vodka 1825","Agua Tónica 900 ml"
 ];
 
 const productosAreas = {
   "Basines": ["Blue Curacao","Parrales","Sprite 3L"],
   "Cumpleaños": ["Blue Curacao","Parrales","Sprite 3L"],
-  "Vasos": ["Fernet Buhero","Flor de caña 5 años","Viuda","Agua Vital Normal","Agua Vital con Gas","Ginger 1.5L","Coca-Cola 3L","Sprite 3L","Simba Pomelo","Blue Curacao","Agua Tónica 900 ml","Jager","Pura Vida","Gyn Amazónico","Vodka 1825","Tequila Jose Cuervo"]
+  "Vasos": ["Fernet Buhero","Parrales","Flor de caña 5 años","Viuda","Agua Vital Normal","Agua Vital con Gas","Ginger 1.5L","Coca-Cola 3L","Sprite 3L","Simba Pomelo","Blue Curacao","Agua Tónica 900 ml","Jager","Pura Vida","Gyn Amazónico","Vodka 1825","Tequila Jose Cuervo"]
 };
 
 // Objeto global para guardar valores de celdas
@@ -200,26 +200,31 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
 
             // USO (solo lectura)
             const tdUso = document.createElement("td");
-            tdUso.textContent = dataGuardada[`${prod}_uso`] || "0";
+            tdUso.textContent = dataGuardada[`${area}_${prod}_uso`] || "0";
             tdUso.style.fontWeight = "600";
             tdUso.style.textAlign = "center";
 
-            // Función de cálculo
+
             const calcularUso = (entrega, devolucion) => {
-              const uso = (parseInt(entrega) || 0) - (parseInt(devolucion) || 0);
+              const uso = (Number(entrega) || 0) - (Number(devolucion) || 0);
               tdUso.textContent = uso;
-              dataGuardada[`${prod}_uso`] = uso;
+              dataGuardada[`${area}_${prod}_uso`] = uso;
               localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
             };
 
+
+         
             // Entrega
             const tdEntrega = document.createElement("td");
             const inputEntrega = crearInputNumerico(
-              dataGuardada[`${prod}_entrega`],
+              dataGuardada[`${area}_${prod}_entrega`] || "",
               (valor) => {
-                dataGuardada[`${prod}_entrega`] = valor;
+                dataGuardada[`${area}_${prod}_entrega`] = Number(valor) || 0;
                 localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
-                calcularUso(valor, dataGuardada[`${prod}_devolucion`]);
+                calcularUso(
+                  dataGuardada[`${area}_${prod}_entrega`],
+                  dataGuardada[`${area}_${prod}_devolucion`] || 0
+                );
               }
             );
             tdEntrega.appendChild(inputEntrega);
@@ -227,14 +232,18 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
             // Devolución
             const tdDevolucion = document.createElement("td");
             const inputDevolucion = crearInputNumerico(
-              dataGuardada[`${prod}_devolucion`],
+              dataGuardada[`${area}_${prod}_devolucion`] || "",
               (valor) => {
-                dataGuardada[`${prod}_devolucion`] = valor;
+                dataGuardada[`${area}_${prod}_devolucion`] = Number(valor) || 0;
                 localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
-                calcularUso(dataGuardada[`${prod}_entrega`], valor);
+                calcularUso(
+                  dataGuardada[`${area}_${prod}_entrega`] || 0,
+                  dataGuardada[`${area}_${prod}_devolucion`]
+                );
               }
             );
             tdDevolucion.appendChild(inputDevolucion);
+
 
             // Armar fila
             row.appendChild(tdNombre);
@@ -420,49 +429,57 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
 });
 // -------------------- AGREGAR PRODUCTO CORTESÍA --------------------
 addProductBtn.onclick = () => {
-  const row = document.createElement("tr");
+    const row = document.createElement("tr");
 
-  const tdNombre = document.createElement("td");
-  const select = document.createElement("select");
-  productosBase.forEach(prod => {
-    const option = document.createElement("option");
-    option.value = prod;
-    option.textContent = prod;
-    select.appendChild(option);
-  });
-  tdNombre.appendChild(select);
+    const tdNombre = document.createElement("td");
+    const select = document.createElement("select");
+    productosBase.forEach(prod => {
+        const option = document.createElement("option");
+        option.value = prod;
+        option.textContent = prod;
+        select.appendChild(option);
+    });
+    tdNombre.appendChild(select);
+
     const tdCantidad = document.createElement("td");
     const inputCantidad = crearInputNumerico("", (valor) => {
         const prodSeleccionado = select.value;
-        dataGuardada[`cortesias_${prodSeleccionado}`] = valor;
         item.nombre = prodSeleccionado;
         item.cantidad = valor;
+
+        // Guardar en dataGuardada
+        dataGuardada[`cortesias_${prodSeleccionado}`] = valor;
+
         localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
         localStorage.setItem("productosCortesiasDinamicos", JSON.stringify(productosCortesiasDinamicos.map(p => ({nombre: p.nombre, cantidad: p.cantidad}))));
     });
     tdCantidad.appendChild(inputCantidad);
 
+    // Crear el objeto item **antes de cualquier cambio**
+    const item = { row, nombre: select.value, cantidad: inputCantidad.value || "0" };
 
-  const item = {row, nombre: select.value, cantidad: ""};
-  productosCortesiasDinamicos.push(item);
-
-  const actualizarData = () => {
-    const prodSeleccionado = select.value;
-    dataGuardada[`cortesias_${prodSeleccionado}`] = tdCantidad.textContent;
-    item.nombre = prodSeleccionado;
-    item.cantidad = tdCantidad.textContent;
-
+    // Guardar valor inicial inmediatamente
+    dataGuardada[`cortesias_${item.nombre}`] = item.cantidad;
+    productosCortesiasDinamicos.push(item);
     localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
     localStorage.setItem("productosCortesiasDinamicos", JSON.stringify(productosCortesiasDinamicos.map(p => ({nombre: p.nombre, cantidad: p.cantidad}))));
-  };
 
-  select.addEventListener("change", actualizarData);
-  tdCantidad.addEventListener("input", actualizarData);
+    // Actualizar cuando cambie el select
+    select.addEventListener("change", () => {
+        const prodSeleccionado = select.value;
+        item.nombre = prodSeleccionado;
+        item.cantidad = inputCantidad.value || "0";
+        dataGuardada[`cortesias_${prodSeleccionado}`] = item.cantidad;
 
-  row.appendChild(tdNombre);
-  row.appendChild(tdCantidad);
-  tableBody.appendChild(row);
+        localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+        localStorage.setItem("productosCortesiasDinamicos", JSON.stringify(productosCortesiasDinamicos.map(p => ({nombre: p.nombre, cantidad: p.cantidad}))));
+    });
+
+    row.appendChild(tdNombre);
+    row.appendChild(tdCantidad);
+    tableBody.appendChild(row);
 };
+
 
 // -------------------- CERRAR MODAL --------------------
 document.getElementById("closeModal").onclick = () => {
@@ -577,8 +594,12 @@ usoBtn.onclick = () => {
     // Cortesías
     totalUso += parseInt(dataGuardada[`cortesias_${prod}`]) || 0;
 
-    // Áreas (uso ya calculado)
-    totalUso += parseInt(dataGuardada[`${prod}_uso`]) || 0;
+    // Áreas
+    Object.keys(productosAreas).forEach(area => {
+      if (productosAreas[area].includes(prod)) {
+        totalUso += parseInt(dataGuardada[`${area}_${prod}_uso`] || 0);
+      }
+    });
 
     if (totalUso > 0) {
       const item = document.createElement("div");
@@ -594,6 +615,7 @@ usoBtn.onclick = () => {
   document.querySelector("#modalInicio h2").textContent = "USO TOTAL";
   modalInicio.style.display = "block";
 };
+
 finalBtn.onclick = () => {
   resumenBody.innerHTML = "";
 
@@ -776,11 +798,19 @@ reporteBtn.onclick = () => {
         const inicial = (parseInt(dataGuardada[`${prod}_conteo`]) || 0) + 
                         (parseInt(dataGuardada[`${prod}_ingreso`]) || 0);
 
-        const uso = (parseInt(dataGuardada[`${prod}_ventas`]) || 0) + 
-                    (parseInt(dataGuardada[`${prod}_mesas`]) || 0) + 
-                    (parseInt(dataGuardada[`cortesias_${prod}`]) || 0) + 
-                    (parseInt(dataGuardada[`${prod}_uso`]) || 0);
+        // ------------------- USO -------------------
+        let uso = (parseInt(dataGuardada[`${prod}_ventas`]) || 0) + 
+                  (parseInt(dataGuardada[`${prod}_mesas`]) || 0) + 
+                  (parseInt(dataGuardada[`cortesias_${prod}`]) || 0);
 
+        // Sumar el uso de todas las áreas donde aparezca el producto
+        Object.keys(productosAreas).forEach(area => {
+            if (productosAreas[area].includes(prod)) {
+                uso += parseInt(dataGuardada[`${area}_${prod}_uso`] || 0);
+            }
+        });
+
+        // ------------------- FIN -------------------
         let final = 0;
         for (let i = 0; i < 5; i++) {
             final += parseInt(dataGuardada[`${prod}_final_${i}`]) || 0;
