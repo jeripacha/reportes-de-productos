@@ -735,9 +735,17 @@ document.getElementById("btnReporteConsolidado").onclick = async () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    const ahora = new Date();
-    const fechaStr = ahora.toLocaleDateString();
-    const horaStr = ahora.toLocaleTimeString();
+  const fechaInput = document.getElementById("fechaReporte").value;
+
+  // Fecha elegida por el usuario (o hoy si no hay)
+  const fechaBase = fechaInput
+    ? new Date(fechaInput + "T12:00:00")
+    : new Date();
+
+  const fechaStr = fechaBase.toLocaleDateString();
+  const horaStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+
 
     // Logo
     const logo = new Image();
@@ -769,7 +777,9 @@ document.getElementById("btnReporteConsolidado").onclick = async () => {
             styles: { fontSize: 10, cellPadding: 3 }
         });
 
-        const nombrePDF = `Uso_Consolidado_${fechaStr.replace(/\//g,"-")}_${ahora.getHours()}h${ahora.getMinutes()}m.pdf`;
+       const horaActual = new Date();
+       const nombrePDF = `Uso_Consolidado_${fechaStr.replace(/\//g,"-")}_${horaActual.getHours()}h${horaActual.getMinutes()}m.pdf`;
+
         doc.save(nombrePDF);
     };
 };
@@ -787,10 +797,17 @@ function eliminarReporte(event, index) {
 
 // --- BOTÓN HACER REPORTE (MODIFICADO) ---
 reporteBtn.onclick = () => {
-    const now = new Date();
-    const fecha = now.toLocaleDateString();
-    const hora = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const id = `${now.toISOString()}`;
+   const fechaInput = document.getElementById("fechaReporte").value;
+
+   // Fecha base elegida por el usuario (o hoy si no puso nada)
+   const fechaBase = fechaInput
+     ? new Date(fechaInput + "T12:00:00")
+     : new Date();
+
+   const fecha = fechaBase.toLocaleDateString();
+   const hora = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+   const id = `${Date.now()}`;
+
 
     const dataReporte = [];
 
@@ -907,6 +924,7 @@ document.getElementById("btnDescargarPDF_Inicio").onclick = generarPDF;
 document.getElementById("btnDescargarPDF_Reporte").onclick = generarPDF;
 
 async function generarPDF() {
+  const ahora = new Date(); // ← AGREGA SOLO ESTO
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
@@ -984,9 +1002,17 @@ async function generarPDF() {
     doc.setTextColor(0);
     doc.text(titulo, 42, 30);
 
-    const ahora = new Date();
-    const fechaTexto = ahora.toLocaleDateString();
-    const horaTexto = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const fechaInput = document.getElementById("fechaReporte").value;
+
+  // Si no eliges fecha, usar la de hoy como respaldo
+  const fechaBase = fechaInput 
+  ? new Date(fechaInput + "T12:00:00") 
+  : new Date();
+
+
+  const fechaTexto = fechaBase.toLocaleDateString();
+  const horaTexto = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
     doc.setFontSize(9);
     doc.text(`Fecha: ${fechaTexto} | Hora: ${horaTexto}`, 14, 44);
 
@@ -1026,7 +1052,7 @@ async function generarPDF() {
     });
 
     // --- Nombre final ---
-    const fechaParaNombre = fechaTexto.replace(/\//g, "-");
+  const fechaParaNombre = fechaBase.toISOString().split("T")[0];
     const horaParaNombre = ahora.getHours() + "h" + ahora.getMinutes() + "m";
     const nombreFinal = `PachaSunset_${titulo.replace(/ /g, "_")}_${fechaParaNombre}_${horaParaNombre}.pdf`;
 
