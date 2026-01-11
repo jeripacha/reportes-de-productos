@@ -133,22 +133,25 @@ body {
   right: 15px;
 }
 
+/* Contenedor principal */
 .fecha-icono {
   font-family: 'Arial', sans-serif;
-  max-width: 220px;
-    margin-top: 50px;   /* Mueve hacia abajo */
-    margin-left: 275px;  /* Mueve hacia la derecha */
-  }
+  max-width: 400px;       /* Tamaño máximo para pantallas grandes */
+  width: 90%;             /* Ocupa el 90% del ancho disponible */
+  margin: 50px auto 0;    /* Centrado horizontal y margen superior */
+}
 
+/* Wrapper del input con icono */
 .input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
 
+/* Input de fecha */
 .input-fecha-icono {
   width: 100%;
-  padding: 8px 36px 8px 12px;
+  padding: 8px 36px 8px 12px;  /* Espacio para el icono a la derecha */
   border-radius: 10px;
   border: 1px solid #ccc;
   font-size: 14px;
@@ -162,12 +165,31 @@ body {
   background-color: #fffaf0;
 }
 
+/* Icono dentro del input */
 .icon {
   position: absolute;
   right: 10px;
   font-size: 16px;
   pointer-events: none;
 }
+
+/* Ajustes para pantallas pequeñas (móviles) */
+@media (max-width: 600px) {
+  .fecha-icono {
+    margin-top: 20px;  /* Menor margen superior en móviles */
+  }
+
+  .input-fecha-icono {
+    padding: 8px 32px 8px 10px; /* Ajuste de padding para pantallas pequeñas */
+    font-size: 13px;            /* Texto más pequeño */
+  }
+
+  .icon {
+    font-size: 14px; /* Icono más pequeño */
+    right: 8px;      /* Ajuste de posición */
+  }
+}
+
 
 /* MODAL */
 .modal {
