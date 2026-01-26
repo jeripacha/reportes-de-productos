@@ -1041,18 +1041,55 @@ async function generarPDF() {
     doc.text(`Fecha: ${fechaTexto} | Hora: ${horaTexto}`, 14, 44);
 
     // --- Tabla ---
-    doc.autoTable({
-        startY: 48,
-        head: [columnas],
-        body: filas.map(f => f.map(cell => typeof cell === 'object' ? cell.estado : cell)),
-        theme: 'plain',
-        headStyles: { fillColor: [0,0,0], textColor: 255, halign: 'center' },
-        columnStyles: columnas.reduce((acc, col, i) => {
-            acc[i] = { halign: 'center', valign: 'middle' };
-            return acc;
-        }, {}),
-        styles: { fontSize: 9, cellPadding: 3, fontStyle: 'normal' },
+   doc.autoTable({
+     startY: 48,
+     head: [columnas],
+     body: filas.map(f => f.map(cell => typeof cell === 'object' ? cell.estado : cell)),
+     theme: 'plain',
+     headStyles: { 
+         fillColor: [0,0,0],    // fondo negro
+         textColor: 255,        // texto blanco
+         halign: 'center',
+         fontSize: 15,           // <- tamaño del encabezado
+         fontStyle: 'bold'       // <- negrita
+     },
+     columnStyles: columnas.reduce((acc, col, i) => {
+         acc[i] = { halign: 'center', valign: 'middle' };
+         return acc;
+     }, {}),
+     styles: { fontSize: 9, cellPadding: 3, fontStyle: 'normal' },
+
+      
         didParseCell: function(data) {
+          // Agrandar los números de cuadre
+          if (data.section === 'body' && modalReporte.style.display !== "none") {
+              const colsNumeros = ["Inicial", "Uso", "Esperado", "Final"];
+              if (colsNumeros.includes(columnas[data.column.index])) {
+                  data.cell.styles.fontSize = 17; // Tamaño que quieras
+               
+              }
+          }
+
+          // --- Agrandar el nombre del producto ---
+          if (
+              data.section === 'body' &&
+              columnas.includes("Producto") &&
+              data.column.index === columnas.indexOf("Producto")
+          ) {
+              data.cell.styles.fontSize = 14;   // tamaño del nombre
+            
+          }
+
+          // 👉 SOLO agrandar el número de la columna "Cantidad"
+          if (
+              data.section === 'body' &&
+              columnas.includes("Cantidad") &&
+              data.column.index === columnas.indexOf("Cantidad")
+          ) {
+              data.cell.styles.fontSize = 17;   // ← tamaño del número
+              
+          }
+
             // Alternar color de fila
             if (data.section === 'body') {
                 data.cell.styles.fillColor = (data.row.index % 2 === 0) ? [240,240,240] : [255,255,255];
@@ -1069,7 +1106,7 @@ async function generarPDF() {
                 if (estado.includes("Cuadra")) data.cell.styles.textColor = [40, 167, 69];   // verde
 
                 data.cell.text = [`${estado} ${numero}`]; // texto limpio + número
-                data.cell.styles.fontStyle = 'bold';      // más grueso
+               data.cell.styles.fontSize = 17;  // <- aquí agrandas
             }
         }
 
