@@ -39,7 +39,7 @@ const productosBase = [
   "Red Label","Black Label 1L","Altosama","Coca-Cola 3L","Sprite 3L","Coca-Cola 2L",
   "Sprite 2L","Simba Pomelo","Monster","Agua Tónica 900 ml","Ginger 900 ml","Ginger 1.5L",
   "Pura Vida","Sprite 2.5L","Blue Curacao","Granadina","Cocalero","Chivas","Harry el limonero",
-  "Supay","Limoncello","Barcelo Imperial","Camel 2 click Grande","Camel 2 click Pequeño",
+  "Supay","Limoncello","Camel 2 click Grande","Camel 2 click Pequeño",
   "Camel 1 click Grande","Camel 1 click Pequeño","Arancello","Tundiqui"
 ];
 
@@ -213,7 +213,7 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
             };
 
 
-         
+
             // Entrega
             const tdEntrega = document.createElement("td");
             const inputEntrega = crearInputNumerico(
@@ -866,7 +866,7 @@ function mostrarReporteGuardado(reporte) {
     // Crear Encabezado
     const header = document.createElement("div");
     header.className = "cuadre-header";
-  
+
     ["Producto", "Inicial", "Uso", "Esperado", "Fin", "Estado"].forEach(text => {
         const span = document.createElement("span");
         span.textContent = text;
@@ -969,17 +969,41 @@ async function generarPDF() {
             }
         });
     } else {
-        const itemsResumen = resumenBody.querySelectorAll(".resumen-item");
-        if (itemsResumen.length > 0) {
-            titulo = document.querySelector("#modalInicio h2")?.textContent || "RESUMEN";
-            columnas = ["Producto", "Cantidad"];
-            itemsResumen.forEach(item => {
-                const nombre = item.querySelector(".producto")?.textContent.trim();
-                const cant = item.querySelector(".inicio-stock")?.textContent.trim();
-                if (nombre) filas.push([nombre, cant]);
-            });
-        }
-    }
+          titulo = document.querySelector("#modalInicio h2")?.textContent || "RESUMEN";
+          columnas = ["Producto", "Cantidad"];
+
+          productosBase.forEach(prod => {
+              let cantidad = 0;
+
+              if (titulo.includes("INICIAL")) {
+                  const inicial = Number(dataGuardada[`${prod}_conteo`]) || 0;
+                  const ingreso = Number(dataGuardada[`${prod}_ingreso`]) || 0;
+                  cantidad = inicial + ingreso;
+              }
+
+              else if (titulo.includes("USO")) {
+                  cantidad += Number(dataGuardada[`${prod}_ventas`]) || 0;
+                  cantidad += Number(dataGuardada[`${prod}_mesas`]) || 0;
+                  cantidad += Number(dataGuardada[`cortesias_${prod}`]) || 0;
+
+                  Object.keys(productosAreas).forEach(area => {
+                      if (productosAreas[area].includes(prod)) {
+                          cantidad += Number(dataGuardada[`${area}_${prod}_uso`]) || 0;
+                      }
+                  });
+              }
+
+              else if (titulo.includes("FINAL")) {
+                  for (let i = 0; i < 5; i++) {
+                      cantidad += Number(dataGuardada[`${prod}_final_${i}`]) || 0;
+                  }
+              }
+
+              // 👉 AQUÍ LA CLAVE: se agrega aunque sea 0
+              filas.push([prod, cantidad]);
+          });
+      }
+
 
     if (filas.length === 0) {
         alert("No hay datos para exportar.");
