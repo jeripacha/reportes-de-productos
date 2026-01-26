@@ -51,7 +51,7 @@ const productosMesas = [
 const productosAreas = {
   "Basines": ["Blue Curacao","Parrales","Sprite 3L"],
   "Cumpleaños": ["Blue Curacao","Parrales","Sprite 3L"],
-  "Vasos": ["Fernet Buhero","Parrales","Flor de caña 5 años","Viuda","Agua Vital Normal","Agua Vital con Gas","Ginger 1.5L","Coca-Cola 3L","Sprite 3L","Simba Pomelo","Blue Curacao","Agua Tónica 900 ml","Jager","Pura Vida","Gyn Amazónico","Vodka 1825","Tequila Jose Cuervo"]
+  "Vasos": ["Fernet Buhero","Parrales","Flor de caña 5 años","Flor de caña 7 años","Viuda","Agua Vital Normal","Agua Vital con Gas","Ginger 1.5L","Coca-Cola 3L","Sprite 3L","Simba Pomelo","Blue Curacao","Agua Tónica 900 ml","Jager","Pura Vida","Gyn Amazónico","Vodka 1825","Tequila Jose Cuervo"]
 };
 
 // Objeto global para guardar valores de celdas
