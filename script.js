@@ -944,7 +944,7 @@ async function generarPDF() {
     // --- Recolección de datos ---
     const itemsCuadre = cuadreBody.querySelectorAll(".cuadre-item");
     if (itemsCuadre.length > 0 && modalReporte.style.display !== "none") {
-        titulo = "REPORTE DE CUADRE";
+        titulo = "REPORTE DE VERIFICACIÓN DE STOCK";
         columnas = ["Producto", "Inicial", "Uso", "Esperado", "Final", "Estado"];
         itemsCuadre.forEach(item => {
             const spans = Array.from(item.querySelectorAll("span"));
@@ -1013,13 +1013,15 @@ async function generarPDF() {
     // --- Encabezado ---
     try {
         const logoImg = await cargarImagen(rutaLogo);
-        doc.addImage(logoImg, 'PNG', 14, 10, 25, 25);
+       doc.addImage(logoImg, 'PNG', 10, 4, 40, 40);
+
     } catch (e) {
         console.warn("Logo no encontrado, continuando solo con texto.");
     }
 
     doc.setFontSize(22);
     doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
     doc.text("PACHA SUNSET", 42, 22);
 
     doc.setFontSize(12);
@@ -1037,8 +1039,18 @@ async function generarPDF() {
   const fechaTexto = fechaBase.toLocaleDateString();
   const horaTexto = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    doc.setFontSize(9);
-    doc.text(`Fecha: ${fechaTexto} | Hora: ${horaTexto}`, 14, 44);
+   const pageWidth = doc.internal.pageSize.getWidth();
+
+   doc.setFontSize(15);
+   doc.setFont(undefined, 'bold');
+   doc.text(
+       `Fecha: ${fechaTexto}\nHora: ${horaTexto}`,
+       pageWidth - 14, // margen derecho
+       20,
+       { align: 'right' }
+   );
+   doc.setFont(undefined, 'normal');
+
 
     // --- Tabla ---
    doc.autoTable({
