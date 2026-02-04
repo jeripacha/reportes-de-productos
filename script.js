@@ -760,7 +760,7 @@ document.getElementById("btnReporteConsolidado").onclick = async () => {
         doc.text(`Fecha: ${fechaStr}    Hora: ${horaStr}`, 200, 18, { align: "right" });
 
         doc.setFontSize(14);
-        doc.text("USO CONSOLIDADO DE PRODUCTOS", 14, 35);
+        doc.text("USO TOTAL DEL MES", 14, 35);
 
         // Tabla
         const columnas = ["Producto", "Cantidad"];
