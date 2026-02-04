@@ -760,7 +760,7 @@ document.getElementById("btnReporteConsolidado").onclick = async () => {
         doc.text(`Fecha: ${fechaStr}    Hora: ${horaStr}`, 200, 18, { align: "right" });
 
         doc.setFontSize(14);
-        doc.text("USO TOTAL DEL MES", 14, 35);
+        doc.text("USO TOTAL DEL MES DE ENERO 2026", 14, 35);
 
         // Tabla
         const columnas = ["Producto", "Cantidad"];
@@ -778,7 +778,7 @@ document.getElementById("btnReporteConsolidado").onclick = async () => {
         });
 
        const horaActual = new Date();
-       const nombrePDF = `Uso_Consolidado_${fechaStr.replace(/\//g,"-")}_${horaActual.getHours()}h${horaActual.getMinutes()}m.pdf`;
+       const nombrePDF = `Uso_TOTAL_ENERO_${fechaStr.replace(/\//g,"-")}_${horaActual.getHours()}h${horaActual.getMinutes()}m.pdf`;
 
         doc.save(nombrePDF);
     };
