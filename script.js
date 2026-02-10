@@ -90,6 +90,8 @@ const modalInicio = document.getElementById("modalInicio");
 const resumenBody = document.getElementById("resumenBody");
 const usoBtn = document.getElementById("usoBtn");
 const finalBtn = document.getElementById("finalBtn");
+const ventasBtn = document.getElementById("ventasBtn");
+
 
 
 
@@ -110,6 +112,7 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
     usoBtn.style.display = "none";
     finalBtn.style.display = "none";
     reporteBtn.style.display = "none"; // agregado
+    ventasBtn.style.display = "none"; // <-- Aseguramos que ventas se oculte también
     mensajeBorrado.classList.remove("show");
 
 
@@ -383,8 +386,9 @@ document.querySelectorAll(".sidebar-item").forEach(btn => {
       inicioBtn.style.display = "block";
       usoBtn.style.display = "block";
       finalBtn.style.display = "block";
-      // Mostrar botón de reporte solo en conteo final
       reporteBtn.style.display = "block";
+      ventasBtn.style.display = "block";
+
 
       return;
     }
@@ -615,6 +619,26 @@ usoBtn.onclick = () => {
   document.querySelector("#modalInicio h2").textContent = "USO TOTAL";
   modalInicio.style.display = "block";
 };
+ventasBtn.onclick = () => {
+  resumenBody.innerHTML = "";
+
+  productosBase.forEach(prod => {
+    const ventas = Number(dataGuardada[`${prod}_ventas`]) || 0;
+
+    if (ventas > 0) {
+      const item = document.createElement("div");
+      item.className = "resumen-item";
+      item.innerHTML = `
+        <span class="producto">${prod}</span>
+        <span class="inicio-stock">${ventas}</span>
+      `;
+      resumenBody.appendChild(item);
+    }
+  });
+
+  document.querySelector("#modalInicio h2").textContent = "VENTAS POR PRODUCTO";
+  modalInicio.style.display = "block";
+};
 
 finalBtn.onclick = () => {
   resumenBody.innerHTML = "";
@@ -708,82 +732,227 @@ function renderizarTarjetas() {
         contenedorReportes.appendChild(card);
     });
 }
-
 document.getElementById("btnReporteConsolidado").onclick = async () => {
-    const checkboxes = document.querySelectorAll(".select-reporte:checked");
-    if(checkboxes.length === 0){
-        alert("Selecciona al menos un reporte para consolidar.");
-        return;
-    }
 
-    // Sumar uso de productos
-    const usoConsolidado = {};
-    productosBase.forEach(prod => usoConsolidado[prod] = 0);
+  /* ===============================
+     VALIDACIÓN
+  =============================== */
+  const checkboxes = document.querySelectorAll(".select-reporte:checked");
+  if (checkboxes.length === 0) {
+    alert("Selecciona al menos un reporte para consolidar.");
+    return;
+  }
 
-    checkboxes.forEach(cb => {
-        const rep = historialReportes[cb.dataset.index];
-        rep.data.forEach(item => {
-            usoConsolidado[item.producto] += item.uso;
-        });
+  /* ===============================
+     CONSOLIDACIÓN DE DATOS
+  =============================== */
+  const usoCons = {}, ingrCons = {}, faltCons = {};
+
+  productosBase.forEach(p => {
+    usoCons[p] = 0;
+    ingrCons[p] = 0;
+    faltCons[p] = 0;
+  });
+
+  checkboxes.forEach(cb => {
+    const rep = historialReportes[cb.dataset.index];
+    rep.data.forEach(item => {
+      usoCons[item.producto] += item.uso || 0;
+      ingrCons[item.producto] += item.ingreso || 0;
+      faltCons[item.producto] += (item.final || 0) - (item.esperado || 0);
+    });
+  });
+
+  const filasPrincipal = productosBase
+    .filter(p => usoCons[p] > 0 || ingrCons[p] > 0 || faltCons[p] !== 0)
+    .map(p => [p, ingrCons[p], usoCons[p]]);
+
+  const datosUso = productosBase.filter(p => usoCons[p] >= 50).map(p => [p, usoCons[p]]);
+  const datosPedidos = productosBase.filter(p => ingrCons[p] >= 80).map(p => [p, ingrCons[p]]);
+  const descuadres = productosBase
+    .filter(p => faltCons[p] !== 0)
+    .map(p => [p, Math.abs(faltCons[p]), faltCons[p] < 0 ? "FALTA" : "SOBRA"]);
+
+  /* ===============================
+     FECHAS Y UTILIDADES
+  =============================== */
+  const { jsPDF } = window.jspdf;
+  const ahora = new Date();
+
+  const fechaInput = document.getElementById("fechaReporte")?.value;
+  const fechaBase = fechaInput ? new Date(fechaInput + "T12:00:00") : ahora;
+  const fechaTextoMes = fechaBase
+    .toLocaleDateString("es-ES", { month: "long", year: "numeric" })
+    .toUpperCase()
+    .replace(" DE ", " ");
+
+  const rutaLogo = "1762998569035-removebg-preview.png";
+
+  const cargarImagen = (url) =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => resolve(img);
+      img.onerror = reject;
     });
 
-    // Filtrar solo productos con uso > 0
-    const filas = productosBase
-        .filter(prod => usoConsolidado[prod] > 0)
-        .map(prod => [prod, usoConsolidado[prod]]);
+  let logoImg = null;
+  try { logoImg = await cargarImagen(rutaLogo); } catch {}
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+  function encabezado(doc, titulo) {
+    if (logoImg) doc.addImage(logoImg, "PNG", 10, 4, 40, 40);
+    doc.setFontSize(22).setFont("helvetica", "bold").text("PACHA SUNSET", 42, 22);
+    doc.setFontSize(13).text(titulo, 42, 30);
 
-  const fechaInput = document.getElementById("fechaReporte").value;
+    const w = doc.internal.pageSize.getWidth();
+    doc.setFontSize(14).setFont(undefined, "bold");
+    doc.text(
+      `${fechaTextoMes}\nHora: ${ahora.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+      w - 14,
+      22,
+      { align: "right" }
+    );
+  }
 
-  // Fecha elegida por el usuario (o hoy si no hay)
-  const fechaBase = fechaInput
-    ? new Date(fechaInput + "T12:00:00")
-    : new Date();
+  /* ===============================
+     PDF 1 — BALANCE GENERAL
+  =============================== */
+  const pdfBalance = new jsPDF();
+  encabezado(pdfBalance, "BALANCE GENERAL DE INVENTARIO");
 
-  const fechaStr = fechaBase.toLocaleDateString();
-  const horaStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  pdfBalance.autoTable({
+    startY: 48,
+    head: [["Producto", "Pedidos", "Consumo"]],
+    body: filasPrincipal,
+    theme: "plain",
+    headStyles: {
+      fillColor: [0,0,0],
+      textColor: 255,
+      halign: "center",
+      fontSize: 15,
+      fontStyle: "bold"
+    },
+    columnStyles: {
+      0: { halign: "center", valign: "middle", fontSize: 15 },
+      1: { halign: "center", valign: "middle", fontSize: 18, fontStyle: "bold" },
+      2: { halign: "center", valign: "middle", fontSize: 18, fontStyle: "bold" }
+    },
+    styles: { cellPadding: 4 }
+  });
 
+  pdfBalance.save(`Balance_General_${fechaTextoMes}.pdf`);
 
+  /* ===============================
+     PDF 2 — ROTACIÓN Y ABASTECIMIENTO
+  =============================== */
+  const pdfRotacion = new jsPDF();
+  encabezado(pdfRotacion, "ROTACIÓN Y ABASTECIMIENTO");
 
-    // Logo
-    const logo = new Image();
-    logo.src = "1762998569035-removebg-preview.png"; // Ajusta ruta si es necesario
-    logo.onload = () => {
-        doc.addImage(logo, 'PNG', 14, 10, 15, 15);
-        doc.setFontSize(16);
-        doc.setFont("helvetica", "bold");
-        doc.text("Pacha Sunset", 34, 18);
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Fecha: ${fechaStr}    Hora: ${horaStr}`, 200, 18, { align: "right" });
+  let y = 48;
 
-        doc.setFontSize(14);
-        doc.text("USO TOTAL DEL MES DE ENERO 2026", 14, 35);
+  if (datosUso.length > 0) {
+    pdfRotacion.autoTable({
+      startY: y,
+      head: [["Producto de Alta Rotación", "Consumo"]],
+      body: datosUso,
+      theme: "plain",
+      headStyles: {
+        fillColor: [41,128,185],
+        textColor: 255,
+        halign: "center",
+        fontSize: 15,
+        fontStyle: "bold"
+      },
+      columnStyles: {
+        0: { halign: "center", valign: "middle", fontSize: 16 },
+        1: { halign: "center", valign: "middle", fontSize: 18, fontStyle: "bold" }
+      },
+      styles: { cellPadding: 4 }
+    });
+    y = pdfRotacion.lastAutoTable.finalY + 12;
+  }
 
-        // Tabla
-        const columnas = ["Producto", "Cantidad"];
-        doc.autoTable({
-            startY: 40,
-            head: [columnas],
-            body: filas,
-            theme: 'grid',
-            headStyles: { fillColor: [255, 140, 66], halign: 'center', valign: 'middle' },
-            columnStyles: {
-                0: { halign: 'center', valign: 'middle' },  // Producto centrado
-                1: { halign: 'center', valign: 'middle' }   // Cantidad centrada
-            },
-            styles: { fontSize: 10, cellPadding: 3 }
-        });
+  if (datosPedidos.length > 0) {
+    pdfRotacion.autoTable({
+      startY: y,
+      head: [["Producto Abastecido", "Pedidos"]],
+      body: datosPedidos,
+      theme: "plain",
+      headStyles: {
+        fillColor: [52,73,94],
+        textColor: 255,
+        halign: "center",
+        fontSize: 15,
+        fontStyle: "bold"
+      },
+      columnStyles: {
+        0: { halign: "center", valign: "middle", fontSize: 16 },
+        1: { halign: "center", valign: "middle", fontSize: 18, fontStyle: "bold" }
+      },
+      styles: { cellPadding: 4 }
+    });
+  }
 
-       const horaActual = new Date();
-       const nombrePDF = `Uso_TOTAL_ENERO_${fechaStr.replace(/\//g,"-")}_${horaActual.getHours()}h${horaActual.getMinutes()}m.pdf`;
+  pdfRotacion.save(`Rotacion_Abastecimiento_${fechaTextoMes}.pdf`);
 
-        doc.save(nombrePDF);
-    };
+  /* ===============================
+     PDF 3 — AUDITORÍA DE FALTANTES
+  =============================== */
+  const pdfAuditoria = new jsPDF();
+  encabezado(pdfAuditoria, "AUDITORÍA DE INVENTARIO");
+
+  pdfAuditoria.autoTable({
+    startY: 48,
+    head: [["Producto", "Diferencia", "Estado"]],
+    body: descuadres.length ? descuadres : [["Sin novedades", "0", "CUADRA"]],
+    theme: "plain",
+    headStyles: {
+      fillColor: [0,0,0],
+      textColor: 255,
+      halign: "center",
+      fontSize: 15,
+      fontStyle: "bold"
+    },
+    columnStyles: {
+      0: { halign: "center", valign: "middle", fontSize: 15 },
+      1: { halign: "center", valign: "middle", fontSize: 18, fontStyle: "bold" },
+      2: { halign: "center", valign: "middle", fontSize: 16, fontStyle: "bold" }
+    },
+    styles: { cellPadding: 4 },
+    didParseCell(data) {
+      if (data.section === "body" && data.column.index === 2) {
+        if (data.cell.raw === "FALTA") data.cell.styles.textColor = [231,76,60];
+        if (data.cell.raw === "SOBRA") data.cell.styles.textColor = [255,140,0];
+        if (data.cell.raw === "CUADRA") data.cell.styles.textColor = [40,167,69];
+      }
+    }
+  });
+
+  const totalFaltas = productosBase.reduce(
+    (acc, p) => acc + (faltCons[p] < 0 ? Math.abs(faltCons[p]) : 0),
+    0
+  );
+
+  let fy = pdfAuditoria.lastAutoTable.finalY + 12;
+
+  pdfAuditoria.setDrawColor(0);
+  pdfAuditoria.setFillColor(240,240,240);
+  pdfAuditoria.rect(14, fy, 182, 30, "FD");
+
+  pdfAuditoria.setFontSize(14).setFont(undefined, "bold")
+    .text("VEREDICTO DE AUDITORÍA:", 20, fy + 10);
+
+  pdfAuditoria.setFontSize(12).setFont(undefined, "normal");
+  pdfAuditoria.text(
+    totalFaltas === 0
+      ? "EXCELENTE: Gestión operativa impecable. Inventario sin pérdidas."
+      : `ATENCIÓN: Se detectó un faltante total de ${totalFaltas} unidades.`,
+    20,
+    fy + 20
+  );
+
+  pdfAuditoria.save(`Auditoria_Faltantes_${fechaTextoMes}.pdf`);
 };
-
 
 // Nueva función para eliminar un reporte específico
 function eliminarReporte(event, index) {
@@ -810,45 +979,49 @@ reporteBtn.onclick = () => {
 
 
     const dataReporte = [];
+  productosBase.forEach(prod => {
+      // Separamos los valores para no perder el dato del ingreso
+      const conteoFisicoInicial = (parseInt(dataGuardada[`${prod}_conteo`]) || 0);
+      const ingresoNuevo = (parseInt(dataGuardada[`${prod}_ingreso`]) || 0);
 
-    productosBase.forEach(prod => {
-        const inicial = (parseInt(dataGuardada[`${prod}_conteo`]) || 0) + 
-                        (parseInt(dataGuardada[`${prod}_ingreso`]) || 0);
+      // El inicial total para el cálculo del cuadre sigue siendo la suma de ambos
+      const inicialTotalCalculo = conteoFisicoInicial + ingresoNuevo;
 
-        // ------------------- USO -------------------
-        let uso = (parseInt(dataGuardada[`${prod}_ventas`]) || 0) + 
-                  (parseInt(dataGuardada[`${prod}_mesas`]) || 0) + 
-                  (parseInt(dataGuardada[`cortesias_${prod}`]) || 0);
+      // ------------------- USO -------------------
+      let uso = (parseInt(dataGuardada[`${prod}_ventas`]) || 0) + 
+                (parseInt(dataGuardada[`${prod}_mesas`]) || 0) + 
+                (parseInt(dataGuardada[`cortesias_${prod}`]) || 0);
 
-        // Sumar el uso de todas las áreas donde aparezca el producto
-        Object.keys(productosAreas).forEach(area => {
-            if (productosAreas[area].includes(prod)) {
-                uso += parseInt(dataGuardada[`${area}_${prod}_uso`] || 0);
-            }
-        });
+      Object.keys(productosAreas).forEach(area => {
+          if (productosAreas[area].includes(prod)) {
+              uso += parseInt(dataGuardada[`${area}_${prod}_uso`] || 0);
+          }
+      });
 
-        // ------------------- FIN -------------------
-        let final = 0;
-        for (let i = 0; i < 5; i++) {
-            final += parseInt(dataGuardada[`${prod}_final_${i}`]) || 0;
-        }
+      // ------------------- FIN -------------------
+      let final = 0;
+      for (let i = 0; i < 5; i++) {
+          final += parseInt(dataGuardada[`${prod}_final_${i}`]) || 0;
+      }
 
-        const esperado = inicial - uso;
-        let estadoStr = "";
-        if (esperado === final) estadoStr = "✅ Cuadra";
-        else if (esperado > final) estadoStr = `❌ Falta ${esperado - final}`;
-        else estadoStr = `⚠️ Sobra ${final - esperado}`;
+      const esperado = inicialTotalCalculo - uso;
+      let estadoStr = "";
+      if (esperado === final) estadoStr = "✅ Cuadra";
+      else if (esperado > final) estadoStr = `❌ Falta ${esperado - final}`;
+      else estadoStr = `⚠️ Sobra ${final - esperado}`;
 
-        dataReporte.push({
-            producto: prod,
-            inicial: inicial,
-            uso: uso,
-            esperado: esperado,
-            final: final,
-            estado: estadoStr
-        });
-    });
-
+      // GUARDAMOS EL REPORTE
+      dataReporte.push({
+          producto: prod,
+          conteoInicialSolo: conteoFisicoInicial, // Guardamos el inicio puro
+          ingreso: ingresoNuevo,                 // <--- AQUÍ GUARDAMOS EL INGRESO SOLO
+          inicial: inicialTotalCalculo,          // La suma (para el reporte diario)
+          uso: uso,
+          esperado: esperado,
+          final: final,
+          estado: estadoStr
+      });
+  });
     // Guardar en el historial
     const nuevoReporte = { id, fecha, hora, data: dataReporte };
     historialReportes.push(nuevoReporte);
@@ -975,11 +1148,13 @@ async function generarPDF() {
           productosBase.forEach(prod => {
               let cantidad = 0;
 
-              if (titulo.includes("INICIAL")) {
-                  const inicial = Number(dataGuardada[`${prod}_conteo`]) || 0;
-                  const ingreso = Number(dataGuardada[`${prod}_ingreso`]) || 0;
-                  cantidad = inicial + ingreso;
-              }
+             // LÓGICA DE VENTAS (Añadida para que se vea en el PDF)
+             if (titulo.includes("VENTAS")) {
+                 cantidad = Number(dataGuardada[`${prod}_ventas`]) || 0;
+             } 
+             else if (titulo.includes("INICIAL")) {
+                 cantidad = (Number(dataGuardada[`${prod}_conteo`]) || 0) + (Number(dataGuardada[`${prod}_ingreso`]) || 0);
+             }
 
               else if (titulo.includes("USO")) {
                   cantidad += Number(dataGuardada[`${prod}_ventas`]) || 0;
