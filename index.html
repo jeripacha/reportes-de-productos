@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,12 +16,15 @@
   <meta name="theme-color" content="#000000">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
+
 <body>
   <header class="site-header">
     <div class="header-container">
@@ -57,6 +61,7 @@
     <button class="sidebar-item" data-modal="Ventas">💰 Ventas</button>
     <button class="sidebar-item" data-modal="Cortesías">🎁 Cortesías</button>
     <button class="sidebar-item" data-modal="conteo final">conteo final</button>
+
   </aside>
 
   <div class="modal" id="modal">
@@ -79,6 +84,8 @@
         <button id="usoBtn" class="btn-inicio" style="display:none;">USO</button>
         <button id="finalBtn" class="btn-inicio" style="display:none;">FINAL</button>
         <button id="reporteBtn" class="btn-reporte" style="display:none;">📋 HACER REPORTE</button>
+        <button id="ventasBtn" class="btn-inicio" style="display:none;">VENTAS</button>
+
       </div>
 
       <div id="mensajeBorrado" class="toast-borrado">
@@ -125,4 +132,5 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </body>
+
 </html>
