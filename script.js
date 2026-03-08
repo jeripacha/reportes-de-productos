@@ -30,7 +30,7 @@ const tableHead = document.getElementById("table-head");
 
 const productosBase = [
   "Fernet Buhero","Fernet Branca","havana especial","havana 7 años","T olmeca chocolate","T olmeca reposado","Flor de caña 7 años","Flor de caña 5 años",
-  "Ron Havana","Gyn Andina","Gyn Frutilla","Gyn Amazónico","Gyn Frutos del Bosque",
+  "Ron Havana","Beefeater Pink","Gyn Andina","Gyn Frutilla","Gyn Amazónico","Gyn Frutos del Bosque",
   "Cerveza Huari","Cerveza Budweiser","Cerveza Corona","Latas Paceña","Golden",
   "Viuda","Parrales","Agua Pacha","Agua Vital Normal","Agua Vital con Gas",
   "Sens Maracuyá","Sens Achachairú","Sens Limón","Sens Arándano","Sens Cereza",
