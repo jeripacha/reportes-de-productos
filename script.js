@@ -37,7 +37,7 @@ const productosBase = [
   "Sens Açaí","Vodka 1825","Tequila Jose Cuervo","Jager","Tres plumas chocolate blanco",
   "Tres plumas chocolate","Tres plumas amareto","Tres plumas menta","Black Label 750 ml",
   "Red Label","Black Label 1L","Altosama","Coca-Cola 3L","Sprite 3L","Coca-Cola 2L",
-  "Sprite 2L","Simba Pomelo","Monster","Agua Tónica 900 ml","Ginger 900 ml","Ginger 1.5L",
+  "Sprite 2L","Simba Pomelo","Monster","Red Bull","Agua Tónica 900 ml","Ginger 900 ml","Ginger 1.5L",
   "Pura Vida","Sprite 2.5L","Blue Curacao","Granadina","Cocalero","Chivas","Harry el limonero",
   "Supay","Limoncello","Camel 2 click Grande","Camel 2 click Pequeño",
   "Camel 1 click Grande","Camel 1 click Pequeño","Arancello","Tundiqui"
