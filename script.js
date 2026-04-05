@@ -29,7 +29,7 @@ const tableBody = document.getElementById("table-body");
 const tableHead = document.getElementById("table-head");
 
 const productosBase = [
-  "Fernet Buhero","Fernet Branca","havana especial","havana especial 1L","havana 7 años","T olmeca chocolate","T olmeca reposado","Flor de caña 7 años","Flor de caña 5 años",
+  "Fernet Buhero","Fernet Branca","Havana Especial 700ml","havana especial 1L","havana 7 años","T olmeca chocolate","T olmeca reposado","Flor de caña 7 años","Flor de caña 5 años",
   "Ron Havana","Beefeater Pink","Gyn Andina","Gyn Frutilla","Gyn Amazónico","Gyn Frutos del Bosque",
   "Cerveza Huari","Cerveza Budweiser","Cerveza Corona","Latas Paceña","Golden",
   "Viuda","Parrales","Casa Real","Agua Pacha","Agua Vital Normal","Agua Vital con Gas",
@@ -44,7 +44,7 @@ const productosBase = [
 ];
 
 const productosMesas = [
-  "Parrales","Monster","Jager","Viuda","Gyn Amazónico","Flor de caña 5 años","Fernet Buhero",
+  "Parrales","Monster","Red Bull","Jager","Viuda","Gyn Amazónico","Havana Especial 700ml","Fernet Buhero",
   "Coca-Cola 2L","Ginger 1.5L","Simba Pomelo","Vodka 1825","Agua Tónica 900 ml"
 ];
 
