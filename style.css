@@ -816,3 +816,15 @@ table tr:hover select {
         vertical-align: top; /* alinea con la parte superior */
     }
 }
+/* Esconde las flechitas (spinners) en laptops/desktop — Chrome, Edge, Safari */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Esconde las flechitas en Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
