@@ -1761,7 +1761,21 @@
 
         // Botón Ir a Ventas (desde Ventas Directas)
         document.getElementById("irAVentasBtn").onclick = () => {
-          // Cierra el modal actual y abre el de Ventas directamente
+          // Calcular consumido por producto y trasladarlo a _ventas
+          productosBase.forEach(prod => {
+            const inicio = (Number(dataGuardada[`${prod}_conteo`]) || 0) + (Number(dataGuardada[`${prod}_ingreso`]) || 0);
+            let final = 0;
+            for (let i = 0; i < 5; i++) {
+              final += parseInt(dataGuardada[`${prod}_final_${i}`]) || 0;
+            }
+            const consumido = Math.max(0, inicio - final);
+            if (consumido > 0) {
+              dataGuardada[`${prod}_ventas`] = consumido;
+            }
+          });
+          localStorage.setItem("dataGuardada", JSON.stringify(dataGuardada));
+
+          // Cierra el modal actual y abre el de Ventas
           modal.style.display = "none";
           const btnVentas = document.querySelector('.sidebar-item[data-modal="Ventas"]');
           if (btnVentas) btnVentas.click();
