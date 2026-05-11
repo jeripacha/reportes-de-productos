@@ -7,7 +7,7 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    <title>MESAS PACHA</title>
+    <title>prodcutos pacha </title>
     <style>
 /* ===== ESTILOS GENERALES Y ESTRUCTURA (SIN CAMBIOS) ===== */
         * {
@@ -491,6 +491,40 @@
           box-shadow: 0 10px 25px rgba(193, 18, 31, 0.4);
           transition: all 0.25s ease;
         }
+        .btn-ir-ventas {
+          background: linear-gradient(135deg, #1a1a2e, #16213e);
+          color: #ffd700;
+          border: 2px solid #ffd700;
+          padding: 14px 26px;
+          font-size: 15px;
+          font-weight: 700;
+          border-radius: 14px;
+          cursor: pointer;
+          margin: 15px auto;
+          display: block;
+          letter-spacing: 1px;
+          box-shadow: 0 6px 20px rgba(255,215,0,0.2);
+          transition: all 0.25s ease;
+        }
+        .btn-ir-ventas:hover {
+          background: #ffd700;
+          color: #1a1a2e;
+          box-shadow: 0 10px 30px rgba(255,215,0,0.4);
+        }
+        .vd-consumo-cero { opacity: 0.35; }
+        .vd-badge-positivo {
+          display: inline-block;
+          background: rgba(255,215,0,0.15);
+          color: #ffd700;
+          border-radius: 8px;
+          padding: 2px 10px;
+          font-weight: 700;
+        }
+        .vd-badge-cero {
+          display: inline-block;
+          color: rgba(255,255,255,0.3);
+          font-weight: 500;
+        }
 
         /* Contenedor */
         .resumen-modal {
@@ -884,6 +918,7 @@
         <button class="sidebar-item" data-modal="Mesas">🪑 Mesas</button>
         <button class="sidebar-item" data-modal="Ventas">💰 Ventas</button>
         <button class="sidebar-item" data-modal="Cortesías">🎁 Cortesías</button>
+        <button class="sidebar-item" data-modal="Ventas Directas">📊 Ventas Directas</button>
         <button class="sidebar-item" data-modal="conteo final">conteo final</button>
 
       </aside>
@@ -909,6 +944,7 @@
             <button id="finalBtn" class="btn-inicio" style="display:none;">FINAL</button>
             <button id="reporteBtn" class="btn-reporte" style="display:none;">📋 HACER REPORTE</button>
             <button id="ventasBtn" class="btn-inicio" style="display:none;">VENTAS</button>
+            <button id="irAVentasBtn" class="btn-ir-ventas" style="display:none;">💰 Ir a Ventas →</button>
 
           </div>
 
@@ -1140,6 +1176,7 @@
             finalBtn.style.display = "none";
             reporteBtn.style.display = "none"; // agregado
             ventasBtn.style.display = "none"; // <-- Aseguramos que ventas se oculte también
+            document.getElementById("irAVentasBtn").style.display = "none";
             mensajeBorrado.classList.remove("show");
 
 
@@ -1420,6 +1457,61 @@
               return;
             }
 
+              // ------------------ VENTAS DIRECTAS ------------------
+              if (title.includes("Ventas Directas")) {
+                const headerRow = document.createElement("tr");
+                ["Producto", "Consumido"].forEach(text => {
+                  const th = document.createElement("th");
+                  th.textContent = text;
+                  headerRow.appendChild(th);
+                });
+                tableHead.appendChild(headerRow);
+
+                let totalConsumo = 0;
+
+                productosBase.forEach(prod => {
+                  const inicio = (Number(dataGuardada[`${prod}_conteo`]) || 0) + (Number(dataGuardada[`${prod}_ingreso`]) || 0);
+                  let final = 0;
+                  for (let i = 0; i < 5; i++) {
+                    final += parseInt(dataGuardada[`${prod}_final_${i}`]) || 0;
+                  }
+                  const consumido = Math.max(0, inicio - final);
+                  totalConsumo += consumido;
+
+                  const row = document.createElement("tr");
+                  if (consumido === 0) row.classList.add("vd-consumo-cero");
+
+                  const tdNombre = document.createElement("td");
+                  tdNombre.textContent = prod;
+
+                  const tdCantidad = document.createElement("td");
+                  tdCantidad.innerHTML = consumido > 0
+                    ? `<span class="vd-badge-positivo">${consumido}</span>`
+                    : `<span class="vd-badge-cero">—</span>`;
+
+                  row.appendChild(tdNombre);
+                  row.appendChild(tdCantidad);
+                  tableBody.appendChild(row);
+                });
+
+                // Fila de total
+                if (totalConsumo > 0) {
+                  const filaTot = document.createElement("tr");
+                  filaTot.style.borderTop = "2px solid rgba(255,215,0,0.4)";
+                  const tdLbl = document.createElement("td");
+                  tdLbl.textContent = "TOTAL";
+                  tdLbl.style.fontWeight = "800";
+                  const tdTot = document.createElement("td");
+                  tdTot.innerHTML = `<span class="vd-badge-positivo">${totalConsumo}</span>`;
+                  filaTot.appendChild(tdLbl);
+                  filaTot.appendChild(tdTot);
+                  tableBody.appendChild(filaTot);
+                }
+
+                document.getElementById("irAVentasBtn").style.display = "block";
+                return;
+              }
+
               // ------------------ MESAS Y OTROS ------------------
               const headerRow = document.createElement("tr");
               ["Producto","Cantidad"].forEach(text => {
@@ -1665,6 +1757,14 @@
 
           document.querySelector("#modalInicio h2").textContent = "VENTAS POR PRODUCTO";
           modalInicio.style.display = "block";
+        };
+
+        // Botón Ir a Ventas (desde Ventas Directas)
+        document.getElementById("irAVentasBtn").onclick = () => {
+          // Cierra el modal actual y abre el de Ventas directamente
+          modal.style.display = "none";
+          const btnVentas = document.querySelector('.sidebar-item[data-modal="Ventas"]');
+          if (btnVentas) btnVentas.click();
         };
 
         finalBtn.onclick = () => {
