@@ -875,6 +875,54 @@
           appearance: textfield;
         }
 
+        /* ===== MODAL RESPALDO ===== */
+        #modal-respaldo {
+          display: none; position: fixed; inset: 0; z-index: 99999;
+          align-items: center; justify-content: center;
+          background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+        }
+        #modal-respaldo.open { display: flex; }
+        .respaldo-panel {
+          background: #fff; border-radius: 20px; padding: 32px 28px;
+          width: min(420px, 94vw);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+          display: flex; flex-direction: column; gap: 16px;
+        }
+        .respaldo-title {
+          font-size: 20px; font-weight: 800; color: #333; text-align: center;
+        }
+        .respaldo-sub {
+          font-size: 13px; color: #777; text-align: center; margin-top: -8px;
+        }
+        .respaldo-btn {
+          width: 100%; padding: 15px; border-radius: 12px; border: none;
+          font-size: 15px; font-weight: 700; cursor: pointer;
+          font-family: inherit; transition: all .15s;
+        }
+        .respaldo-btn.export {
+          background: linear-gradient(135deg, #ff8c42, #ff5f7e);
+          color: #fff; box-shadow: 0 4px 14px rgba(255,100,100,0.35);
+        }
+        .respaldo-btn.export:hover { transform: translateY(-2px); }
+        .respaldo-btn.import {
+          background: linear-gradient(135deg, #7a2cff, #4f46e5);
+          color: #fff; box-shadow: 0 4px 14px rgba(100,60,255,0.35);
+        }
+        .respaldo-btn.import:hover { transform: translateY(-2px); }
+        .respaldo-btn.cancel {
+          background: #f3f4f6; color: #555; border: 1px solid #e5e7eb;
+        }
+        .respaldo-divider {
+          border: none; border-top: 1px solid #e5e7eb; margin: 0;
+        }
+        .respaldo-info {
+          background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px;
+          padding: 12px 14px; font-size: 12px; color: #166534; line-height: 1.5;
+          display: none;
+        }
+        .respaldo-info.visible { display: block; }
+        #respaldo-file-input { display: none; }
+
 </style>
     <link
         href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@700&family=Raleway:wght@600&family=Press+Start+2P&family=Walter+Turncoat&family=Lobster&family=Poppins:wght@600&display=swap"
@@ -920,8 +968,35 @@
         <button class="sidebar-item" data-modal="Cortesías">🎁 Cortesías</button>
         <button class="sidebar-item" data-modal="Ventas Directas">📊 Ventas Directas</button>
         <button class="sidebar-item" data-modal="conteo final">conteo final</button>
+        <hr style="border-color:#ffffff33;margin:10px 0;">
+        <button class="sidebar-item" id="btnRespaldo">💾 Respaldo / Sync</button>
 
       </aside>
+
+      <!-- MODAL RESPALDO -->
+      <div id="modal-respaldo">
+        <div class="respaldo-panel">
+          <div class="respaldo-title">💾 Respaldo de Datos</div>
+          <div class="respaldo-sub">Exportá desde laptop · Importá en tablet</div>
+
+          <button class="respaldo-btn export" id="btnExportarRespaldo">
+            ⬇️ Exportar respaldo (laptop → archivo)
+          </button>
+
+          <hr class="respaldo-divider">
+
+          <button class="respaldo-btn import" id="btnImportarRespaldo">
+            ⬆️ Importar respaldo (tablet ← archivo)
+          </button>
+          <input type="file" id="respaldo-file-input" accept=".json">
+
+          <div class="respaldo-info" id="respaldo-info-msg"></div>
+
+          <hr class="respaldo-divider">
+
+          <button class="respaldo-btn cancel" id="btnCerrarRespaldo">Cancelar</button>
+        </div>
+      </div>
 
       <div class="modal" id="modal">
         <div class="modal-content">
@@ -2472,6 +2547,72 @@
 
             doc.save(nombreFinal);
         }
+
+        // ============================================================
+        // RESPALDO / SYNC — Export e Import de localStorage
+        // ============================================================
+        (function() {
+          const KEYS = ["dataGuardada", "productosCortesiasDinamicos", "historialReportes"];
+
+          const modalRespaldo  = document.getElementById("modal-respaldo");
+          const btnRespaldo    = document.getElementById("btnRespaldo");
+          const btnExportar    = document.getElementById("btnExportarRespaldo");
+          const btnImportar    = document.getElementById("btnImportarRespaldo");
+          const fileInput      = document.getElementById("respaldo-file-input");
+          const infoMsg        = document.getElementById("respaldo-info-msg");
+          const btnCerrar      = document.getElementById("btnCerrarRespaldo");
+
+          function abrirRespaldo() { modalRespaldo.classList.add("open"); infoMsg.classList.remove("visible"); }
+          function cerrarRespaldo() { modalRespaldo.classList.remove("open"); }
+
+          btnRespaldo.addEventListener("click", () => { document.getElementById("sidebar").classList.remove("open"); abrirRespaldo(); });
+          btnCerrar.addEventListener("click", cerrarRespaldo);
+          modalRespaldo.addEventListener("click", (e) => { if (e.target === modalRespaldo) cerrarRespaldo(); });
+
+          // ---- EXPORTAR ----
+          btnExportar.addEventListener("click", () => {
+            const backup = { _version: 1, _fecha: new Date().toISOString() };
+            KEYS.forEach(k => { backup[k] = JSON.parse(localStorage.getItem(k) || "null"); });
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement("a");
+            const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 16);
+            a.href     = url;
+            a.download = `mesas_pacha_respaldo_${stamp}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            infoMsg.textContent = "✅ Archivo descargado. Pasalo a la tablet y usá 'Importar respaldo'.";
+            infoMsg.classList.add("visible");
+          });
+
+          // ---- IMPORTAR ----
+          btnImportar.addEventListener("click", () => { fileInput.value = ""; fileInput.click(); });
+          fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              try {
+                const backup = JSON.parse(e.target.result);
+                if (!backup._version) throw new Error("Archivo inválido");
+                KEYS.forEach(k => {
+                  if (backup[k] !== undefined && backup[k] !== null) {
+                    localStorage.setItem(k, JSON.stringify(backup[k]));
+                  }
+                });
+                infoMsg.style.background = "#f0fdf4"; infoMsg.style.color = "#166534"; infoMsg.style.borderColor = "#bbf7d0";
+                infoMsg.textContent = "✅ Datos importados correctamente. Recargando…";
+                infoMsg.classList.add("visible");
+                setTimeout(() => { cerrarRespaldo(); location.reload(); }, 1500);
+              } catch (err) {
+                infoMsg.style.background = "#fef2f2"; infoMsg.style.color = "#991b1b"; infoMsg.style.borderColor = "#fecaca";
+                infoMsg.textContent = "❌ El archivo no es válido. Asegurate de exportar desde esta misma app.";
+                infoMsg.classList.add("visible");
+              }
+            };
+            reader.readAsText(file);
+          });
+        })();
 
 </script>
 </body>
